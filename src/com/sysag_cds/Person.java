@@ -44,7 +44,7 @@ public class Person extends Agent {
             this.disease=SEIR.infectious;
             //addBehaviour(new waitSusceptible());
         }else{
-            addBehaviour(new waitInfectious());
+            addBehaviour(new waitMessage());
         }
         addBehaviour(new TickerBehaviour(this, 10000) {
             protected void onTick() {
@@ -87,13 +87,14 @@ public class Person extends Agent {
 
     void goToLocation(Location l) {
         position = l;
+        position.posizione_nodo=0;
         if(this.disease==SEIR.infectious){
             DFAgentDescription dfd = new DFAgentDescription();
             dfd.setName( getAID() );
             ServiceDescription sd  = new ServiceDescription();
             sd.setType( "Contagio" );
             sd.addProperties(new Property("DPI",0.5)); //proprietà id nodo
-            sd.setName(String.valueOf(l.posizione_nodo));
+            sd.setName(String.valueOf(position.posizione_nodo));
             dfd.addServices(sd);
 
             try {
@@ -107,7 +108,7 @@ public class Person extends Agent {
             DFAgentDescription template = new DFAgentDescription();
             ServiceDescription sds  = new ServiceDescription();
             sds.setType( "Contagio" );
-            sds.setName(String.valueOf(l.posizione_nodo));
+            sds.setName(String.valueOf(position.posizione_nodo));
             template.addServices(sds);
             addBehaviour( new SubscriptionInitiator( this,
                             DFService.createSubscriptionMessage( this, getDefaultDF(),
@@ -122,6 +123,26 @@ public class Person extends Agent {
                         */
                         }
                     });
+
+            DFAgentDescription template1 = new DFAgentDescription();
+            ServiceDescription sds1  = new ServiceDescription();
+            sds1.setType( "Multe" );
+            sds1.setName(String.valueOf(position.posizione_nodo));
+            template1.addServices(sds1);
+            addBehaviour( new SubscriptionInitiator( this,
+                    DFService.createSubscriptionMessage( this, getDefaultDF(),
+                            template1, null))
+            {
+                protected void handleInform(ACLMessage inform) {
+                            /*
+                            try {
+                                                             //chiamare la funzione di calcolo del contagio
+                            }
+                            catch (FIPAException fe) {fe.printStackTrace(); }
+                        */
+                }
+            });
+
         }
 
     }
@@ -164,7 +185,7 @@ public class Person extends Agent {
             }
         }
     */
-    class waitInfectious extends Behaviour{
+    class waitMessage extends Behaviour{
         boolean infettato=false;
 
         @Override
@@ -179,12 +200,22 @@ public class Person extends Agent {
                     System.out.println(str);
                     if(dfds[0].getAllServices().hasNext()) {
                         ServiceDescription ss = (ServiceDescription) dfds[0].getAllServices().next();
-                        Property pp = (Property) ss.getAllProperties().next();
-                        AID contagiato = dfds[0].getName();
-                        System.out.println(pp.getName() + pp.getValue() + " " + contagiato);
-                        //infettato=true;
-                        System.out.println("Sono contagiato "+ getName());
-                        setExposed();
+                        if(ss.getType().equals("Contagio")) {
+                            Property pp = (Property) ss.getAllProperties().next();
+                            AID contagiato = dfds[0].getName();
+                            System.out.println(pp.getName() + pp.getValue() + " " + contagiato);
+                            //infettato=true;
+                            System.out.println("Sono contagiato " + getName());
+                            setExposed();
+                        }else{
+                            if(ss.getType().equals("Multe")){
+                                Property pp = (Property) ss.getAllProperties().next();
+                                AID multato = dfds[0].getName();
+                                System.out.println(pp.getName() + pp.getValue() + " " + multato);
+                                //infettato=true;
+                                System.out.println("Sono multato " + getName());
+                            }
+                        }
                     }
                 } catch (FIPAException e) {
                 e.printStackTrace();
