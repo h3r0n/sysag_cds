@@ -195,7 +195,7 @@ public class Person extends Agent {
                     for (DFAgentDescription dfd : dfds) {
                         Iterator allServices = dfd.getAllServices();
                         while (allServices.hasNext()) {
-                            allServices.next();
+                            ServiceDescription sd = (ServiceDescription) allServices.next();
                             if (Simulation.debug) {
                                 System.out.println("dfd name: " + dfd.getName());
                                 System.out.println("services: " + Iterators.size(allServices));
@@ -222,8 +222,6 @@ public class Person extends Agent {
     void unsubscribeAll() {
         if (Simulation.debug)
             System.out.println(getLocalName() + " unsubscribed");
-
-        System.out.println(subscriptions.toString());
 
         for (SubscriptionInitiator s : subscriptions) {
             s.cancel(getDefaultDF(),true);
