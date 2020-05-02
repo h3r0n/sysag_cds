@@ -1,18 +1,29 @@
 package com.sysag_cds;
 
-import jade.core.Agent;
+import java.util.Objects;
 
 public class Location {
-    enum edificio{
-        scuole,
-        negozi,
-        lavoro,
-        svago,
-        casa
+    protected String location;
+
+    public Location(String l) {
+        location = l;
     }
 
+    @Override
+    public String toString() {
+        return location;
+    }
 
-    Agent Person;
-    edificio tipo_di_edificio;
-    int posizione_nodo;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Location)) return false;
+        Location location1 = (Location) o;
+        return location.equals(location1.location);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(location);
+    }
 }
