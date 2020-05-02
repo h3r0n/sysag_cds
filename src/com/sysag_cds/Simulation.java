@@ -8,6 +8,9 @@ import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public class Simulation extends Agent {
     public static int tick = 1000;
     public static boolean debug = true;
@@ -17,16 +20,17 @@ public class Simulation extends Agent {
         AgentController a;
 
         Object [] args = new Object[1];
-        args[0] = "infectious";
+
 
         try {
-
+            args[0] = "infectious";
             a = c.createNewAgent( "contagioso", "com.sysag_cds.Person", args);
             a.start();
 
             Thread.sleep(1000);
 
-            a = c.createNewAgent( "sano", "com.sysag_cds.Person", null);
+            args[0] = "susceptible";
+            a = c.createNewAgent( "sano", "com.sysag_cds.Person", args);
             a.start();
 
         } catch (StaleProxyException | InterruptedException e) {
@@ -36,14 +40,17 @@ public class Simulation extends Agent {
 
     public static void main(String[] args) {
 
+        List<Building> list = new LinkedList<>();
+
         Graph<Building,Road> map = (
                 new Lattice2DGenerator<Building, Road>(UndirectedSparseGraph.<Building, Road>getFactory(),
-                        new BuildingFactory(),
+                        new BuildingFactory(list),
                         new RoadFactory(),
                         10, false
                 )
         ).get();
 
         System.out.println(map.toString());
+        System.out.println(list.toString());
     }
 }
