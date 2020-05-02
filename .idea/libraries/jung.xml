@@ -1,8 +1,7 @@
 <component name="libraryTable">
-  <library name="net.sf.jung:jung-samples:2.1.1" type="repository">
+  <library name="jung" type="repository">
     <properties maven-id="net.sf.jung:jung-samples:2.1.1" />
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/lib/jung-samples-2.1.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/jung-api-2.1.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/guava-19.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/jung-visualization-2.1.1.jar!/" />
