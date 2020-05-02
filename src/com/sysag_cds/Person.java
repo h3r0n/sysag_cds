@@ -1,9 +1,8 @@
 package com.sysag_cds;
 
-import jade.core.AID;
+import com.google.common.collect.Iterators;
 import jade.core.Agent;
-import jade.core.Service;
-import jade.core.behaviours.*;
+import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.Property;
@@ -15,231 +14,145 @@ import jade.proto.SubscriptionInitiator;
 public class Person extends Agent {
 
     enum SEIR {
-        susceptible,
-        exposed,
-        infectious,
-        recovered
+        SUSCEPTIBLE,
+        EXPOSED,
+        INFECTIOUS,
+        RECOVERED
     }
 
-    float DPI= (float) Math.random();
-    float primary= (float) Math.random();
-
-    static int beta = 10;
     static int delta = 2;
     static int gamma = 2;
 
-    SEIR disease = SEIR.susceptible;
+    protected SEIR diseaseStatus = SEIR.SUSCEPTIBLE;
 
     Location position;
     Location home;
 
-    public boolean isAtHome() {
-        return this.position == this.home;
+    protected void setup() {
+
+        if (Simulation.debug)
+            System.out.println("Agent "+getLocalName()+" started");
+
+        Object[] args=this.getArguments();
+
+        if(args!=null && args[0].equals("infectious"))
+            setInfectious();
+        else
+            setSusceptible();
+
+        goToLocation(new Location("b"));
     }
 
-    protected void setup() {
-        position = home;
-        Object[] args=this.getArguments();
-        if(args[0].equals("infetto")){
-            this.disease=SEIR.infectious;
-            //addBehaviour(new waitSusceptible());
-        }else{
-            addBehaviour(new waitMessage());
-        }
-        addBehaviour(new TickerBehaviour(this, 10000) {
-            protected void onTick() {
-                primary= (float) (primary-0.1);
-            }
-        } );
-        Location lavoro=new Location();
-        this.goToLocation(lavoro);
-        System.out.println(this.DPI+" "+this.primary);
+    void setSusceptible() {
+        diseaseStatus = SEIR.SUSCEPTIBLE;
+        if (Simulation.debug)
+            System.out.println(getLocalName() + " is susceptible");
+    }
 
+    boolean isSusceptible() {
+        return diseaseStatus == SEIR.SUSCEPTIBLE;
     }
 
     void setExposed() {
-        disease = SEIR.exposed;
+        diseaseStatus = SEIR.EXPOSED;
 
-        addBehaviour(new WakerBehaviour(this, Simulation.tick*delta) {
+        if (Simulation.debug)
+            System.out.println(getLocalName() + " has been exposed");
+
+        addBehaviour(new WakerBehaviour(this, Simulation.tick * delta) {
             @Override
             protected void onWake() {
-                System.out.println(myAgent.getLocalName()+" infectious");
                 setInfectious();
             }
         });
     }
 
-    void setInfectious() {
-        disease = SEIR.infectious;
+    boolean isExposed() {
+        return diseaseStatus == SEIR.EXPOSED;
+    }
 
-        addBehaviour(new WakerBehaviour(this, Simulation.tick*gamma) {
+    void setInfectious() {
+        diseaseStatus = SEIR.INFECTIOUS;
+
+        if (Simulation.debug)
+            System.out.println(getLocalName() + " is infectious");
+
+        addBehaviour(new WakerBehaviour(this, Simulation.tick * gamma) {
             @Override
             protected void onWake() {
-                System.out.println(myAgent.getLocalName()+" recovered");
                 setRecovered();
             }
         });
     }
 
+    boolean isInfectious() {
+        return diseaseStatus == SEIR.INFECTIOUS;
+    }
+
     void setRecovered() {
-        disease = SEIR.recovered;
+        diseaseStatus = SEIR.RECOVERED;
+
+        if (Simulation.debug)
+            System.out.println(getLocalName() + " has recovered");
+    }
+
+    boolean isRecovered() {
+        return diseaseStatus == SEIR.RECOVERED;
     }
 
     void goToLocation(Location l) {
         position = l;
-        position.posizione_nodo=0;
-        if(this.disease==SEIR.infectious){
-            DFAgentDescription dfd = new DFAgentDescription();
-            dfd.setName( getAID() );
-            ServiceDescription sd  = new ServiceDescription();
-            sd.setType( "Contagio" );
-            sd.addProperties(new Property("DPI",0.5)); //proprietà id nodo
-            sd.setName(String.valueOf(position.posizione_nodo));
-            dfd.addServices(sd);
 
-            try {
-                DFService.register(this, dfd );
-            }
-            catch (FIPAException fe) { fe.printStackTrace(); }
+        if (isInfectious())
+            registerContagionService();
 
-            lavora();
-
-        }else{
-            DFAgentDescription template = new DFAgentDescription();
-            ServiceDescription sds  = new ServiceDescription();
-            sds.setType( "Contagio" );
-            sds.setName(String.valueOf(position.posizione_nodo));
-            template.addServices(sds);
-            addBehaviour( new SubscriptionInitiator( this,
-                            DFService.createSubscriptionMessage( this, getDefaultDF(),
-                                    template, null))
-                    {
-                        protected void handleInform(ACLMessage inform) {
-                            /*
-                            try {
-                                                             //chiamare la funzione di calcolo del contagio
-                            }
-                            catch (FIPAException fe) {fe.printStackTrace(); }
-                        */
-                        }
-                    });
-
-            DFAgentDescription template1 = new DFAgentDescription();
-            ServiceDescription sds1  = new ServiceDescription();
-            sds1.setType( "Multe" );
-            sds1.setName(String.valueOf(position.posizione_nodo));
-            template1.addServices(sds1);
-            addBehaviour( new SubscriptionInitiator( this,
-                    DFService.createSubscriptionMessage( this, getDefaultDF(),
-                            template1, null))
-            {
-                protected void handleInform(ACLMessage inform) {
-                            /*
-                            try {
-                                                             //chiamare la funzione di calcolo del contagio
-                            }
-                            catch (FIPAException fe) {fe.printStackTrace(); }
-                        */
-                }
-            });
-
-        }
-
+        if (isSusceptible())
+            subscribeContagionService();
     }
 
-    private void lavora() {
-        addBehaviour(new WakerBehaviour(this, Simulation.tick*beta) {
-            @Override
-            protected void onWake() {
-                System.out.println(myAgent.getLocalName()+" esce di lavoro");
+    void registerContagionService() {
+        DFAgentDescription dfd = new DFAgentDescription();
+        dfd.setName(getAID());
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("Contagion");
+        sd.setName(getLocalName());
+        sd.addProperties(new Property("Location", position.toString()));
+        //sd.addProperties(new Property("DPI", 0.5));
+        dfd.addServices(sd);
+
+        try {
+            DFService.register(this, dfd);
+        } catch (FIPAException fe) {
+            fe.printStackTrace();
+        }
+    }
+
+    void subscribeContagionService() {
+        DFAgentDescription template = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("Contagion");
+        sd.addProperties(new Property("Location", position.toString()));
+        template.addServices(sd);
+        addBehaviour(new SubscriptionInitiator(this, DFService.createSubscriptionMessage(this, getDefaultDF(), template, null)) {
+            protected void handleInform(ACLMessage inform) {
                 try {
-                    DFService.deregister(this.myAgent);
-                } catch (FIPAException e) {
-                    e.printStackTrace();
+                    DFAgentDescription[] dfds = DFService.decodeNotification(inform.getContent());
+                    for (DFAgentDescription dfd : dfds) {
+                        ServiceDescription sd = (ServiceDescription) dfd.getAllServices().next();
+                        if (Simulation.debug) {
+                            System.out.println("dfd name: "+dfd.getName());
+                            System.out.println("services: "+ Iterators.size(dfd.getAllServices()));
+                            System.out.println("sd type: "+sd.getType());
+                            System.out.println("sd name:"+sd.getName());
+                            System.out.println("Location: "+((Property)sd.getAllProperties().next()).getValue());
+                        }
+                        //chiamare la funzione di calcolo del contagio
+                        setExposed();
+                    }
                 }
-            DPI= (float) (DPI-0.1);
+                catch (FIPAException fe) {fe.printStackTrace(); }
             }
         });
     }
 
-    /*
-        class waitSusceptible extends Behaviour{
-
-            @Override
-            public void action() {
-                ACLMessage msg= myAgent.receive();
-                if(msg!=null){
-                    AID contagiabile=msg.getSender();
-                    //String contenuto=msg.getContent();
-                    ACLMessage messaggio_contagio= new ACLMessage(ACLMessage.PROPOSE);
-                    messaggio_contagio.addReceiver(contagiabile);
-                    messaggio_contagio.setContent("DPI");
-                    send(messaggio_contagio);
-                }
-                block();
-            }
-
-            @Override
-            public boolean done() {
-                return false;
-            }
-        }
-    */
-    class waitMessage extends Behaviour{
-        boolean infettato=false;
-
-        @Override
-        public void action() {
-            ACLMessage msg= myAgent.receive();
-            if(msg!=null){
-                //calcola contagio
-                try {
-                    DFAgentDescription[] dfds =
-                            DFService.decodeNotification(msg.getContent());
-                    String str= String.valueOf(msg.getPerformative());
-                    System.out.println(str);
-                    if(dfds[0].getAllServices().hasNext()) {
-                        ServiceDescription ss = (ServiceDescription) dfds[0].getAllServices().next();
-                        if(ss.getType().equals("Contagio")) {
-                            Property pp = (Property) ss.getAllProperties().next();
-                            AID contagiato = dfds[0].getName();
-                            System.out.println(pp.getName() + pp.getValue() + " " + contagiato);
-                            //infettato=true;
-                            System.out.println("Sono contagiato " + getName());
-                            setExposed();
-                        }else{
-                            if(ss.getType().equals("Multe")){
-                                Property pp = (Property) ss.getAllProperties().next();
-                                AID multato = dfds[0].getName();
-                                System.out.println(pp.getName() + pp.getValue() + " " + multato);
-                                //infettato=true;
-                                System.out.println("Sono multato " + getName());
-                            }
-                        }
-                    }
-                } catch (FIPAException e) {
-                e.printStackTrace();
-                }
-
-            }
-            block();
-        }
-
-        @Override
-        public boolean done() {
-            return infettato;
-        }
-    }
-/*
-    class consumePrimary extends CyclicBehaviour{
-
-        @Override
-        public void action() {
-
-        }
-    }
-*/
-    void sneeze() {
-        
-    }
 }
