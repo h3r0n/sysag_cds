@@ -3,7 +3,7 @@ package com.sysag_cds;
 import com.google.common.base.Supplier;
 import java.util.List;
 
-public class BuildingFactory implements Supplier {
+public class BuildingFactory implements Supplier<Building> {
 
     protected int count = 0;
     protected List<Building> list;
@@ -15,7 +15,7 @@ public class BuildingFactory implements Supplier {
     }
 
     @Override
-    public Object get() {
+    public Building get() {
         Building b = new Building("b"+count++);
         if (list!=null)
             list.add(b);

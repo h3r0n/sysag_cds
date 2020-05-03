@@ -29,7 +29,7 @@ public class Person extends Agent {
 
     protected SEIR diseaseStatus = SEIR.SUSCEPTIBLE;    // stato di avanzamento della malattia
 
-    Location home = new Location("a");      // residenza
+    Location home = new Location("testHome");      // residenza
     Location position = home;  // posizione corrente
 
     List<SubscriptionInitiator> subscriptions = new LinkedList<>();
@@ -41,10 +41,30 @@ public class Person extends Agent {
 
         Object[] args=this.getArguments();
 
-        if(args!=null && args[0].equals("infectious"))
-            setInfectious();
-        else
-            setSusceptible();
+        if(args!=null) {
+            // il primo argomento specifica lo stato della malattia:
+            switch ((String) args[0]) {
+                case "SUSCEPTIBLE":
+                    setSusceptible();
+                    break;
+                case "EXPOSED":
+                    setExposed();
+                    break;
+                case "INFECTIOUS":
+                    setInfectious();
+                    break;
+                case "RECOVERED":
+                    setRecovered();
+                    break;
+            }
+
+            // il secondo argomento specifica la posizione
+            if (args.length>1) {
+                home = new Location((String) args[1]);
+                position = home;
+            }
+
+        }
 
         goToLocation(new Location("b"));
         /*addBehaviour(new WakerBehaviour(this, Simulation.tick*1) {

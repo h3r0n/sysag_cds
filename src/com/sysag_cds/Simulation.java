@@ -1,56 +1,93 @@
 package com.sysag_cds;
 
-import com.google.common.base.Supplier;
 import edu.uci.ics.jung.algorithms.generators.Lattice2DGenerator;
-import edu.uci.ics.jung.graph.*;
+import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.graph.UndirectedSparseGraph;
 import jade.core.Agent;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
+import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Simulation extends Agent {
     public static int tick = 1000;
     public static boolean debug = true;
 
+    protected int nPeople = 1;
+    protected double[] diseaseDistribution = new double[4];
+    protected int mapSize;     // la mappa è un quadrato, mapSize è il numero di Building per lato
+
+    Graph<Building,Road> map;
+
     protected void setup()  {
-        ContainerController c = getContainerController();
-        AgentController a;
 
-        Object [] args = new Object[1];
+        readArgs(getArguments());
+        List<Building> buildingList = new ArrayList<>();
+        buildMap(buildingList);
+        createPeople(buildingList);
 
-
-        try {
-            args[0] = "infectious";
-            a = c.createNewAgent( "contagioso", "com.sysag_cds.Person", args);
-            a.start();
-
-            Thread.sleep(1000);
-
-            args[0] = "susceptible";
-            a = c.createNewAgent( "sano", "com.sysag_cds.Person", args);
-            a.start();
-
-        } catch (StaleProxyException | InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
-    public static void main(String[] args) {
+    /*
+        Parametri di Simulation:
+            [0] numero di Person
+            [2-4] probabilità di avere persone SUSCEPTIBLE,EXPOSED,INFECTIOUS,RECOVERED
+            [5] numero di Building per lato, considerando che la mappa è un quadrato. Deve essere >= 2
 
-        List<Building> list = new LinkedList<>();
+        Esempio: -agents simulation:com.sysag_cds.Simulation(1,.5,0,.5,0,2)
+            Crea 1 agente Person, con il 50% di probabilità di essere SUSCEPTIBLE e il 50% di essere INFECTIOUS
+            Crea poi una mappa con 4 edifici
 
-        Graph<Building,Road> map = (
-                new Lattice2DGenerator<Building, Road>(UndirectedSparseGraph.<Building, Road>getFactory(),
-                        new BuildingFactory(list),
+     */
+    void readArgs(Object[] args) {
+        nPeople = Integer.parseInt((String) args[0]);
+        diseaseDistribution[Person.SEIR.SUSCEPTIBLE.ordinal()] = Double.parseDouble((String) args[1]);
+        diseaseDistribution[Person.SEIR.EXPOSED.ordinal()] = Double.parseDouble((String) args[2]);
+        diseaseDistribution[Person.SEIR.INFECTIOUS.ordinal()] = Double.parseDouble((String) args[3]);
+        diseaseDistribution[Person.SEIR.RECOVERED.ordinal()] = Double.parseDouble((String) args[4]);
+        mapSize = Integer.parseInt((String) args[5]);
+    }
+
+    void buildMap(List<Building> buildingList) {
+
+        map = (
+                new Lattice2DGenerator<>(UndirectedSparseGraph.getFactory(),
+                        new BuildingFactory(buildingList),
                         new RoadFactory(),
-                        10, false
+                        mapSize, false
                 )
         ).get();
 
-        System.out.println(map.toString());
-        System.out.println(list.toString());
+        if (Simulation.debug) {
+            System.out.println(map.toString());
+            System.out.println("Vertices=Building, Edges=Roads");
+        }
+    }
+
+    void createPeople(List<Building> buildingList) {
+
+        ContainerController c = getContainerController();
+        Object [] personArgs = new Object[2];
+        Random rand = new Random();
+        String[] diseaseStatus = new String[]{"SUSCEPTIBLE","EXPOSED","INFECTIOUS","RECOVERED"};
+        int[] dsIndex = new int[]{0,1,2,3};
+        EnumeratedIntegerDistribution distribution = new EnumeratedIntegerDistribution(dsIndex,diseaseDistribution);
+
+
+
+        for (int i = 0; i<nPeople; i++) {
+            personArgs[0] = diseaseStatus[distribution.sample()];    // assegna uno stato di salute casuale
+            personArgs[1] = buildingList.get(rand.nextInt(buildingList.size())).toString();   // assegna una casa casuale
+            try {
+                AgentController a = c.createNewAgent( "p"+i, "com.sysag_cds.Person", personArgs);
+                a.start();
+            } catch (StaleProxyException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
