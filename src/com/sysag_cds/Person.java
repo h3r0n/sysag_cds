@@ -2,6 +2,8 @@ package com.sysag_cds;
 
 import com.google.common.collect.Iterators;
 import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.TickerBehaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -14,6 +16,7 @@ import jade.util.leap.Iterator;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 public class Person extends Agent {
 
@@ -24,8 +27,13 @@ public class Person extends Agent {
         RECOVERED
     }
 
+    Queue<Behaviour> todo = new LinkedList<>();
+
+    int Hunger_Stat = 10;
+
     static int delta = 2;   // tempo di incubazione (da EXPOSED a INFECTIOUS)
     static int gamma = 2;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
+    static int beta = 10000;   // tempo di aggiornamento stats
 
     protected SEIR diseaseStatus = SEIR.SUSCEPTIBLE;    // stato di avanzamento della malattia
 
@@ -36,6 +44,18 @@ public class Person extends Agent {
 
     protected void setup() {
 
+        addBehaviour(new TickerBehaviour(this, beta ) {
+            protected void onTick() {
+                Hunger_Stat=Hunger_Stat-1;
+            }
+        } );
+
+        addBehaviour(new TickerBehaviour(this, beta ) {
+            protected void onTick() {
+                todo.add(new goToLocation(new Location("b")));
+            }
+        } );
+
         if (Simulation.debug)
             System.out.println("Agent "+getLocalName()+" started");
 
@@ -43,6 +63,7 @@ public class Person extends Agent {
 
         if(args!=null) {
             // il primo argomento specifica lo stato della malattia:
+            System.out.println((String) args[0]);
             switch ((String) args[0]) {
                 case "SUSCEPTIBLE":
                     setSusceptible();
@@ -66,7 +87,9 @@ public class Person extends Agent {
 
         }
 
-        goToLocation(new Location("b"));
+
+
+        //goToLocation(new Location("b"));
         /*addBehaviour(new WakerBehaviour(this, Simulation.tick*1) {
             @Override
             protected void onWake() {
@@ -143,18 +166,34 @@ public class Person extends Agent {
         return diseaseStatus == SEIR.RECOVERED;
     }
 
-    void goToLocation(Location l) {
+    public class goToLocation extends Behaviour{
+        Location l;
 
-        if (isSusceptible())
-            unsubscribeAll();
+        goToLocation(Location s){
+            l.location=s.location;
+        }
 
-        position = l;
+        @Override
+        public void action() {
 
-        if (isInfectious())
-            updateContagionService();
+            System.out.println("L'agente "+this.myAgent.getLocalName()+" si sta spostando verso "+ l.location);
 
-        if (isSusceptible())
-            subscribeContagionService();
+            if (isSusceptible())
+                unsubscribeAll();
+
+            position = l;
+
+            if (isInfectious())
+                updateContagionService();
+
+            if (isSusceptible())
+                subscribeContagionService();
+        }
+
+        @Override
+        public boolean done() {
+            return true;
+        }
     }
 
     // crea un servizio contagion relativo a una location
@@ -238,6 +277,48 @@ public class Person extends Agent {
         subscriptions.add(subscription);
 
     }
+
+    // notifica se esistono possibilità di contagio nel luogo corrente
+    void subscribeBusinessService(BuildingAgent.Business bus) {
+        DFAgentDescription template = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType(String.valueOf(bus));
+        //sd.addProperties(new Property("Location", position.toString()));
+        template.addServices(sd);
+
+        SubscriptionInitiator subscription =  new SubscriptionInitiator(this, DFService.createSubscriptionMessage(this, getDefaultDF(), template, null)) {
+            protected void handleInform(ACLMessage inform) {
+                try {
+                    DFAgentDescription[] dfds = DFService.decodeNotification(inform.getContent());
+                    for (DFAgentDescription dfd : dfds) {
+                        Iterator allServices = dfd.getAllServices();
+                        while (allServices.hasNext()) {
+                            ServiceDescription sd = (ServiceDescription) allServices.next();
+                            if (Simulation.debug) {
+                                System.out.println("dfd name: " + dfd.getName());
+                                System.out.println("services: " + Iterators.size(allServices));
+                                System.out.println("sd type: " + sd.getType());
+                                System.out.println("sd name:" + sd.getName());
+                                System.out.println("Location: " + ((Property) sd.getAllProperties().next()).getValue());
+                                System.out.println("Received by: " + getLocalName());
+                            }
+                            //chiamare la funzione di calcolo del percorso
+                            Location l= (Location) ((Property) sd.getAllProperties().next()).getValue(); //??
+                            todo.add(new goToLocation(l));
+                        }
+                    }
+                } catch (FIPAException fe) {
+                    fe.printStackTrace();
+                }
+            }
+        };
+
+        addBehaviour(subscription);
+        subscriptions.add(subscription);
+
+    }
+
+
 
     void unsubscribeAll() {
         if (Simulation.debug)
