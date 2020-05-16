@@ -1,7 +1,9 @@
 package com.sysag_cds;
 
 import com.google.common.collect.Iterators;
+import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -9,11 +11,14 @@ import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import jade.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.Stack;
 
 public class Person extends Agent {
 
@@ -26,6 +31,7 @@ public class Person extends Agent {
 
     static int delta = 2;   // tempo di incubazione (da EXPOSED a INFECTIOUS)
     static int gamma = 2;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
+    static int walkingTime = 1; // tempo per percorrere una strada
 
     protected SEIR diseaseStatus = SEIR.SUSCEPTIBLE;    // stato di avanzamento della malattia
 
@@ -33,6 +39,7 @@ public class Person extends Agent {
     Location position = home;  // posizione corrente
 
     List<SubscriptionInitiator> subscriptions = new LinkedList<>();
+    AID pathFinding;
 
     protected void setup() {
 
@@ -248,6 +255,86 @@ public class Person extends Agent {
         }
 
         subscriptions.clear();
+    }
+
+    void updatePathFinding() throws FIPAException {
+        DFAgentDescription dfd = new DFAgentDescription();
+        ServiceDescription sd  = new ServiceDescription();
+        sd.setType("PathFinding");
+        dfd.addServices(sd);
+
+        DFAgentDescription[] result = DFService.search(this, dfd);
+        pathFinding = result[0].getName();
+    }
+
+    class goDestination extends Behaviour {
+
+        Queue<Road> stages = new LinkedList<>();
+        String destination;
+        int state = 0;
+
+        public goDestination(String destination) {
+            super();
+            this.destination = destination;
+        }
+
+        public goDestination(Agent a, String destination) {
+            super(a);
+            this.destination = destination;
+        }
+
+        @Override
+        public void onStart() {
+            //assert pathFinding != null;
+            ACLMessage msg = new ACLMessage(ACLMessage.QUERY_REF);
+            msg.addReceiver(pathFinding);
+            msg.setContent(position.toString()+","+destination);
+            send(msg);
+        }
+
+        @Override
+        public void action() {
+            switch (state) {
+                // attende il messaggio contenente il path
+                case 0:
+                    MessageTemplate MT1 = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+                    MessageTemplate MT2 = MessageTemplate.MatchSender(pathFinding);
+                    ACLMessage msg = myAgent.receive(MessageTemplate.and(MT1,MT2));
+
+                    if (msg!=null) {
+                        String[] roads = msg.getContent().split(",");
+                        for (String s : roads) {
+                            stages.add(new Road(s));
+                        }
+                        state++;
+                    } else {
+                        block();
+                    }
+                    break;
+
+                // in cammino
+                case 1:
+                    state++;
+                    block(Simulation.tick*walkingTime);
+                    break;
+
+                // raggiunta nuova location
+                case 2:
+                    if (stages.size()!=0) {
+                        state--;
+                        goToLocation(stages.poll());
+                    } else {
+                        state = 3;
+                        goToLocation(new Building(destination));
+                    }
+                    break;
+            }
+        }
+
+        @Override
+        public boolean done() {
+            return state==3;
+        }
     }
 
 }
