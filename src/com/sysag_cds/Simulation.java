@@ -1,15 +1,25 @@
 package com.sysag_cds;
 
 import edu.uci.ics.jung.algorithms.generators.Lattice2DGenerator;
+import edu.uci.ics.jung.algorithms.shortestpath.DijkstraShortestPath;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.UndirectedSparseGraph;
 import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
+import jade.domain.DFService;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.Property;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPAException;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
 import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -30,6 +40,8 @@ public class Simulation extends Agent {
         buildMap(buildingList);
         createPeople(buildingList);
 
+        addBehaviour(new managePathFindingRequest());
+        registerPathFindingService();
     }
 
     /*
@@ -88,6 +100,54 @@ public class Simulation extends Agent {
             } catch (StaleProxyException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    String getPath(String begin, String end) {
+        List<Road> list = (new DijkstraShortestPath<>(map)).getPath(new Building(begin),new Building(end));
+        Iterator<Road> iterator = list.iterator();
+        StringBuilder path = new StringBuilder();
+
+        if (iterator.hasNext())
+            path.append(iterator.next());
+        while (iterator.hasNext()) {
+            path.append(",");
+            path.append(iterator.next().toString());
+        }
+
+        return path.toString();
+    }
+
+    void registerPathFindingService() {
+        DFAgentDescription dfd = new DFAgentDescription();
+        dfd.setName(getAID());
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("PathFinding");
+        sd.setName(getLocalName());
+        //sd.addProperties(new Property("Location", position.toString()));
+        //sd.addProperties(new Property("DPI", 0.5));
+        dfd.addServices(sd);
+
+        try {
+            DFService.register(this, dfd);
+        } catch (FIPAException fe) {
+            fe.printStackTrace();
+        }
+    }
+
+    class managePathFindingRequest extends CyclicBehaviour {
+        @Override
+        public void action() {
+            MessageTemplate MT1=MessageTemplate.MatchPerformative(ACLMessage.QUERY_REF);
+            ACLMessage msg = myAgent.receive(MT1);
+
+            if (msg != null) {
+                ACLMessage reply = msg.createReply();
+                String[] query = msg.getContent().split(",");
+                reply.setPerformative(ACLMessage.INFORM );
+                reply.setContent(getPath(query[0],query[1]));
+            } else
+                block();
         }
     }
 }
