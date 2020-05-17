@@ -20,7 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-public class Person extends Agent {
+public class Person extends TaskAgent {
 
     enum SEIR {
         SUSCEPTIBLE,
@@ -34,15 +34,13 @@ public class Person extends Agent {
     static int seirGamma = 2;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
     static int walkingTime = 1; // tempo per percorrere una strada
     static int deltaResources = 10;   // tempo di aggiornamento risorse
+    static int maxfood = 10;    // dimensione riserva beni di prima necessità
 
     // status
-    int food = 10;  // riserva beni di prima necessità
+    int food = maxfood;  // riserva beni di prima necessità
     protected SEIR diseaseStatus = SEIR.SUSCEPTIBLE;    // stato di avanzamento della malattia
-    Location home = new Location("testHome");      // residenza
+    Location home = new Building("testHome");      // residenza
     Location position = home;  // posizione corrente
-
-    // scheduling
-    Queue<Behaviour> todo = new LinkedList<>(); // coda task non ancora eseguiti
     List<SubscriptionInitiator> subscriptions = new LinkedList<>(); // lista sottoscrizioni (potenziali contagi)
     AID pathFinding;    // agente fornitore del servizio pathfinding
 
@@ -94,6 +92,10 @@ public class Person extends Agent {
         if (Simulation.debug)
             System.out.println("Agent " + getLocalName() + " started");
     }
+
+    // ------------------------------------
+    //  Modello SEIR
+    // ------------------------------------
 
     void setSusceptible() {
         diseaseStatus = SEIR.SUSCEPTIBLE;
@@ -162,6 +164,10 @@ public class Person extends Agent {
     boolean isRecovered() {
         return diseaseStatus == SEIR.RECOVERED;
     }
+
+    // ------------------------------------
+    //  Spostamenti
+    // ------------------------------------
 
     void setLocation(Location l) {
 
@@ -282,36 +288,22 @@ public class Person extends Agent {
         pathFinding = result[0].getName();
     }
 
-    abstract class Task extends Behaviour {
+    // ------------------------------------
+    //  Task
+    // ------------------------------------
 
-        public Task() {
-            super();
-        }
-
-        public Task(Agent a) {
-            super(a);
-        }
-
-        @Override
-        public int onEnd() {
-            if (todo.peek() != null)
-                addBehaviour(todo.poll());
-            return super.onEnd();
-        }
-    }
-
-    class walkingTask extends Task {
+    class WalkingTask extends Task {
 
         Queue<Road> stages = new LinkedList<>();
         String destination;
         int state = 0;
 
-        public walkingTask(String destination) {
+        public WalkingTask(String destination) {
             super();
             this.destination = destination;
         }
 
-        public walkingTask(Agent a, String destination) {
+        public WalkingTask(Agent a, String destination) {
             super(a);
             this.destination = destination;
         }
@@ -388,8 +380,8 @@ public class Person extends Agent {
         @Override
         public void action() {
             if (wait) {
-                block(Simulation.tick);
                 wait = false;
+                block(Simulation.tick);
             }
         }
 
@@ -397,5 +389,9 @@ public class Person extends Agent {
         public boolean done() {
             return !wait;
         }
+    }
+
+    public void scheduleWalkHome() {
+        scheduleTask(new WalkingTask(home.toString()));
     }
 }
