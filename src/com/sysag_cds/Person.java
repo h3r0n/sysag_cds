@@ -4,6 +4,8 @@ import com.google.common.collect.Iterators;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.TickerBehaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -18,7 +20,6 @@ import jade.util.leap.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.Stack;
 
 public class Person extends Agent {
 
@@ -29,9 +30,14 @@ public class Person extends Agent {
         RECOVERED
     }
 
+    Queue<Behaviour> todo = new LinkedList<>();
+
+    int Hunger_Stat = 10;
+
     static int delta = 2;   // tempo di incubazione (da EXPOSED a INFECTIOUS)
     static int gamma = 2;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
     static int walkingTime = 1; // tempo per percorrere una strada
+    static int beta = 10000;   // tempo di aggiornamento stats
 
     protected SEIR diseaseStatus = SEIR.SUSCEPTIBLE;    // stato di avanzamento della malattia
 
@@ -43,6 +49,12 @@ public class Person extends Agent {
 
     protected void setup() {
 
+        addBehaviour(new TickerBehaviour(this, beta ) {
+            protected void onTick() {
+                Hunger_Stat=Hunger_Stat-1;
+            }
+        } );
+
         if (Simulation.debug)
             System.out.println("Agent "+getLocalName()+" started");
 
@@ -50,6 +62,7 @@ public class Person extends Agent {
 
         if(args!=null) {
             // il primo argomento specifica lo stato della malattia:
+            System.out.println((String) args[0]);
             switch ((String) args[0]) {
                 case "SUSCEPTIBLE":
                     setSusceptible();
@@ -73,7 +86,9 @@ public class Person extends Agent {
 
         }
 
-        goToLocation(new Location("b"));
+
+
+        //goToLocation(new Location("b"));
         /*addBehaviour(new WakerBehaviour(this, Simulation.tick*1) {
             @Override
             protected void onWake() {
@@ -151,6 +166,8 @@ public class Person extends Agent {
     }
 
     void goToLocation(Location l) {
+
+        System.out.println("L'agente "+getLocalName()+" si è spostato in "+ l.location);
 
         if (isSusceptible())
             unsubscribeAll();
