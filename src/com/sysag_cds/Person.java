@@ -4,7 +4,6 @@ import com.google.common.collect.Iterators;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
-import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
@@ -30,37 +29,28 @@ public class Person extends Agent {
         RECOVERED
     }
 
-    Queue<Behaviour> todo = new LinkedList<>();
-
-    int Hunger_Stat = 10;
-
-    static int delta = 2;   // tempo di incubazione (da EXPOSED a INFECTIOUS)
-    static int gamma = 2;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
+    // costanti
+    static int seirDelta = 2;   // tempo di incubazione (da EXPOSED a INFECTIOUS)
+    static int seirGamma = 2;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
     static int walkingTime = 1; // tempo per percorrere una strada
-    static int beta = 10000;   // tempo di aggiornamento stats
+    static int deltaResources = 10;   // tempo di aggiornamento risorse
 
+    // status
+    int food = 10;  // riserva beni di prima necessità
     protected SEIR diseaseStatus = SEIR.SUSCEPTIBLE;    // stato di avanzamento della malattia
-
     Location home = new Location("testHome");      // residenza
     Location position = home;  // posizione corrente
 
-    List<SubscriptionInitiator> subscriptions = new LinkedList<>();
-    AID pathFinding;
+    // scheduling
+    Queue<Behaviour> todo = new LinkedList<>(); // coda task non ancora eseguiti
+    List<SubscriptionInitiator> subscriptions = new LinkedList<>(); // lista sottoscrizioni (potenziali contagi)
+    AID pathFinding;    // agente fornitore del servizio pathfinding
 
     protected void setup() {
 
-        addBehaviour(new TickerBehaviour(this, beta ) {
-            protected void onTick() {
-                Hunger_Stat=Hunger_Stat-1;
-            }
-        } );
-
-        if (Simulation.debug)
-            System.out.println("Agent "+getLocalName()+" started");
-
-        Object[] args=this.getArguments();
-
-        if(args!=null) {
+        // inizializzazione agente
+        Object[] args = this.getArguments();
+        if (args != null) {
             // il primo argomento specifica lo stato della malattia:
             System.out.println((String) args[0]);
             switch ((String) args[0]) {
@@ -77,24 +67,32 @@ public class Person extends Agent {
                     setRecovered();
                     break;
             }
-
             // il secondo argomento specifica la posizione
-            if (args.length>1) {
+            if (args.length > 1) {
                 home = new Location((String) args[1]);
                 position = home;
             }
-
         }
 
+        // ricerca agente fornitore del servizio pathfinding
+        try {
+            updatePathFinding();
+        } catch (FIPAException e) {
+            e.printStackTrace();
+        }
 
+        // aggiornamento risorse
+        addBehaviour(new TickerBehaviour(this, Simulation.tick * deltaResources) {
+            protected void onTick() {
+                food--;
 
-        //goToLocation(new Location("b"));
-        /*addBehaviour(new WakerBehaviour(this, Simulation.tick*1) {
-            @Override
-            protected void onWake() {
-                goToLocation(new Location("c"));
+                if (food < 0)
+                    food = 0;
             }
-        });*/
+        });
+
+        if (Simulation.debug)
+            System.out.println("Agent " + getLocalName() + " started");
     }
 
     void setSusceptible() {
@@ -118,7 +116,7 @@ public class Person extends Agent {
             if (Simulation.debug)
                 System.out.println(getLocalName() + " has been exposed");
 
-            addBehaviour(new WakerBehaviour(this, Simulation.tick * delta) {
+            addBehaviour(new WakerBehaviour(this, Simulation.tick * seirDelta) {
                 @Override
                 protected void onWake() {
                     setInfectious();
@@ -138,7 +136,7 @@ public class Person extends Agent {
         if (Simulation.debug)
             System.out.println(getLocalName() + " is infectious");
 
-        addBehaviour(new WakerBehaviour(this, Simulation.tick * gamma) {
+        addBehaviour(new WakerBehaviour(this, Simulation.tick * seirGamma) {
             @Override
             protected void onWake() {
                 setRecovered();
@@ -152,7 +150,7 @@ public class Person extends Agent {
 
     void setRecovered() {
 
-        if (diseaseStatus==SEIR.INFECTIOUS)
+        if (diseaseStatus == SEIR.INFECTIOUS)
             deregisterContagionService();
 
         diseaseStatus = SEIR.RECOVERED;
@@ -165,9 +163,9 @@ public class Person extends Agent {
         return diseaseStatus == SEIR.RECOVERED;
     }
 
-    void goToLocation(Location l) {
+    void setLocation(Location l) {
 
-        System.out.println("L'agente "+getLocalName()+" si è spostato in "+ l.location);
+        System.out.println("L'agente " + getLocalName() + " si sposta in " + l.location);
 
         if (isSusceptible())
             unsubscribeAll();
@@ -232,7 +230,7 @@ public class Person extends Agent {
         sd.addProperties(new Property("Location", position.toString()));
         template.addServices(sd);
 
-        SubscriptionInitiator subscription =  new SubscriptionInitiator(this, DFService.createSubscriptionMessage(this, getDefaultDF(), template, null)) {
+        SubscriptionInitiator subscription = new SubscriptionInitiator(this, DFService.createSubscriptionMessage(this, getDefaultDF(), template, null)) {
             protected void handleInform(ACLMessage inform) {
                 try {
                     DFAgentDescription[] dfds = DFService.decodeNotification(inform.getContent());
@@ -268,7 +266,7 @@ public class Person extends Agent {
             System.out.println(getLocalName() + " unsubscribed");
 
         for (SubscriptionInitiator s : subscriptions) {
-            s.cancel(getDefaultDF(),true);
+            s.cancel(getDefaultDF(), true);
         }
 
         subscriptions.clear();
@@ -276,7 +274,7 @@ public class Person extends Agent {
 
     void updatePathFinding() throws FIPAException {
         DFAgentDescription dfd = new DFAgentDescription();
-        ServiceDescription sd  = new ServiceDescription();
+        ServiceDescription sd = new ServiceDescription();
         sd.setType("PathFinding");
         dfd.addServices(sd);
 
@@ -284,18 +282,36 @@ public class Person extends Agent {
         pathFinding = result[0].getName();
     }
 
-    class goDestination extends Behaviour {
+    abstract class Task extends Behaviour {
+
+        public Task() {
+            super();
+        }
+
+        public Task(Agent a) {
+            super(a);
+        }
+
+        @Override
+        public int onEnd() {
+            if (todo.peek() != null)
+                addBehaviour(todo.poll());
+            return super.onEnd();
+        }
+    }
+
+    class walkingTask extends Task {
 
         Queue<Road> stages = new LinkedList<>();
         String destination;
         int state = 0;
 
-        public goDestination(String destination) {
+        public walkingTask(String destination) {
             super();
             this.destination = destination;
         }
 
-        public goDestination(Agent a, String destination) {
+        public walkingTask(Agent a, String destination) {
             super(a);
             this.destination = destination;
         }
@@ -305,7 +321,7 @@ public class Person extends Agent {
             //assert pathFinding != null;
             ACLMessage msg = new ACLMessage(ACLMessage.QUERY_REF);
             msg.addReceiver(pathFinding);
-            msg.setContent(position.toString()+","+destination);
+            msg.setContent(position.toString() + "," + destination);
             send(msg);
         }
 
@@ -316,9 +332,9 @@ public class Person extends Agent {
                 case 0:
                     MessageTemplate MT1 = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
                     MessageTemplate MT2 = MessageTemplate.MatchSender(pathFinding);
-                    ACLMessage msg = myAgent.receive(MessageTemplate.and(MT1,MT2));
+                    ACLMessage msg = myAgent.receive(MessageTemplate.and(MT1, MT2));
 
-                    if (msg!=null) {
+                    if (msg != null) {
                         String[] roads = msg.getContent().split(",");
                         for (String s : roads) {
                             stages.add(new Road(s));
@@ -332,17 +348,17 @@ public class Person extends Agent {
                 // in cammino
                 case 1:
                     state++;
-                    block(Simulation.tick*walkingTime);
+                    block(Simulation.tick * walkingTime);
                     break;
 
                 // raggiunta nuova location
                 case 2:
-                    if (stages.size()!=0) {
+                    if (stages.size() != 0) {
                         state--;
-                        goToLocation(stages.poll());
+                        setLocation(stages.poll());
                     } else {
                         state = 3;
-                        goToLocation(new Building(destination));
+                        setLocation(new Building(destination));
                     }
                     break;
             }
@@ -350,8 +366,36 @@ public class Person extends Agent {
 
         @Override
         public boolean done() {
-            return state==3;
+            return state == 3;
         }
     }
 
+    class WaitingTask extends Task {
+
+        boolean wait = true;
+        int ticks;
+
+        public WaitingTask(int ticks) {
+            super();
+            this.ticks = ticks;
+        }
+
+        public WaitingTask(Agent a, int ticks) {
+            super(a);
+            this.ticks = ticks;
+        }
+
+        @Override
+        public void action() {
+            if (wait) {
+                block(Simulation.tick);
+                wait = false;
+            }
+        }
+
+        @Override
+        public boolean done() {
+            return !wait;
+        }
+    }
 }
