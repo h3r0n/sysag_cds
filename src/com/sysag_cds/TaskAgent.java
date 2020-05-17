@@ -35,6 +35,7 @@ abstract public class TaskAgent extends Agent {
     public void scheduleTask(Task t) {
         // se la coda è vuota, non ci sono task in esecuzione, quindi il nuovo task dovrà essere eseguito manualmente
         if (todo.peek() == null) {
+            System.out.println("La coda è vuota per l'agente :" + this.getLocalName());
             todo.add(t);
             addBehaviour(todo.peek());
         // se la coda è piena, c'è un task in esecuzione, il quale eseguirà automaticamente il successivo alla terminazione

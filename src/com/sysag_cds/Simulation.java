@@ -35,13 +35,16 @@ public class Simulation extends Agent {
 
     protected void setup()  {
 
+        addBehaviour(new managePathFindingRequest());
+        registerPathFindingService();
+
         readArgs(getArguments());
         List<Building> buildingList = new ArrayList<>();
         buildMap(buildingList);
         createPeople(buildingList);
 
-        addBehaviour(new managePathFindingRequest());
-        registerPathFindingService();
+
+        //Siccome vengono create prima le persone del servizio gps, talvolta le persone lo chiamano prima che sia registrato il servizio, invertire l'ordine?
     }
 
     /*
@@ -142,10 +145,13 @@ public class Simulation extends Agent {
             ACLMessage msg = myAgent.receive(MT1);
 
             if (msg != null) {
+                System.out.println("E' arrivato un messaggio per il GPS");
                 ACLMessage reply = msg.createReply();
                 String[] query = msg.getContent().split(",");
                 reply.setPerformative(ACLMessage.INFORM );
                 reply.setContent(getPath(query[0],query[1]));
+                reply.addReceiver(msg.getSender());
+                send(reply);
             } else
                 block();
         }

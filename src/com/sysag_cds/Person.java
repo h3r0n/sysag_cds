@@ -15,6 +15,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
+import java.util.concurrent.ThreadLocalRandom;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -31,7 +32,7 @@ public class Person extends TaskAgent {
 
     // costanti
     static int seirDelta = 2;   // tempo di incubazione (da EXPOSED a INFECTIOUS)
-    static int seirGamma = 2;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
+    static int seirGamma = 100;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
     static int walkingTime = 1; // tempo per percorrere una strada
     static int deltaResources = 10;   // tempo di aggiornamento risorse
     static int maxfood = 10;    // dimensione riserva beni di prima necessità
@@ -83,9 +84,15 @@ public class Person extends TaskAgent {
         addBehaviour(new TickerBehaviour(this, Simulation.tick * deltaResources) {
             protected void onTick() {
                 food--;
-
                 if (food < 0)
                     food = 0;
+            }
+        });
+
+        addBehaviour(new TickerBehaviour(this, Simulation.tick * deltaResources) {
+            protected void onTick() {
+               System.out.println("Sto aggiungendo un nuovo percorso per l'agente :" + this.myAgent.getLocalName());
+               scheduleRandomWalk();
             }
         });
 
@@ -285,7 +292,11 @@ public class Person extends TaskAgent {
         dfd.addServices(sd);
 
         DFAgentDescription[] result = DFService.search(this, dfd);
-        pathFinding = result[0].getName();
+        if(result.length!=0) {
+            pathFinding = result[0].getName();
+        }else{
+            //inserire azioni o messaggi alternativi
+        }
     }
 
     // ------------------------------------
@@ -333,6 +344,7 @@ public class Person extends TaskAgent {
                         }
                         state++;
                     } else {
+                        System.out.println("Non ricevo nulla dal GPS");
                         block();
                     }
                     break;
@@ -340,6 +352,7 @@ public class Person extends TaskAgent {
                 // in cammino
                 case 1:
                     state++;
+                    System.out.println("In attesa sulla strada");
                     block(Simulation.tick * walkingTime);
                     break;
 
@@ -347,9 +360,11 @@ public class Person extends TaskAgent {
                 case 2:
                     if (stages.size() != 0) {
                         state--;
+                        System.out.println("In transito da :"+stages.peek().location);
                         setLocation(stages.poll());
                     } else {
                         state = 3;
+                        System.out.println("Arrivato a destinazione: "+destination);
                         setLocation(new Building(destination));
                     }
                     break;
@@ -393,5 +408,27 @@ public class Person extends TaskAgent {
 
     public void scheduleWalkHome() {
         scheduleTask(new WalkingTask(home.toString()));
+    }
+
+    public void scheduleRandomWalk() {
+        int randomNum = ThreadLocalRandom.current().nextInt(1, 5);
+        System.out.println(randomNum);
+        switch (randomNum){
+            case 1:
+                scheduleTask(new WalkingTask("b0"));
+                break;
+            case 2:
+                scheduleTask(new WalkingTask("b1"));
+                break;
+            case 3:
+                scheduleTask(new WalkingTask("b2"));
+                break;
+            case 4:
+                scheduleTask(new WalkingTask("b3"));
+                break;
+            default:
+                scheduleTask(new WalkingTask(home.toString()));
+                break;
+        }
     }
 }
