@@ -39,7 +39,11 @@ public class Person extends TaskAgent {
 
     // status
     int food = maxfood;  // riserva beni di prima necessità
+    boolean dead = false;
+    boolean ill = false;
+    boolean naughty= false; // va bene settarlo a false e poi cambiarlo durante la creazione degli agenti?
     protected SEIR diseaseStatus = SEIR.SUSCEPTIBLE;    // stato di avanzamento della malattia
+    float DPI = 0; //valore di DPI impostato inizialmente a zero
     Location home = new Building("testHome");      // residenza
     Location position = home;  // posizione corrente
     List<SubscriptionInitiator> subscriptions = new LinkedList<>(); // lista sottoscrizioni (potenziali contagi)
@@ -93,6 +97,14 @@ public class Person extends TaskAgent {
             protected void onTick() {
                System.out.println("Sto aggiungendo un nuovo percorso per l'agente :" + this.myAgent.getLocalName());
                scheduleRandomWalk();
+            }
+        });
+
+        addBehaviour(new TickerBehaviour(this, Simulation.tick * deltaResources) {
+            protected void onTick() {
+                if(IllProbability()==1) {
+                     GoToHospital();
+                }
             }
         });
 
@@ -166,6 +178,19 @@ public class Person extends TaskAgent {
 
         if (Simulation.debug)
             System.out.println(getLocalName() + " has recovered");
+
+        if(DeathProbability()==1){
+            this.dead=true;
+            //Manda messaggio ad Agente Statista
+        }
+    }
+
+    int DeathProbability() {
+        return ThreadLocalRandom.current().nextInt(0, 1);
+    }
+
+    int IllProbability() {
+        return ThreadLocalRandom.current().nextInt(0, 1);
     }
 
     boolean isRecovered() {
@@ -430,5 +455,13 @@ public class Person extends TaskAgent {
                 scheduleTask(new WalkingTask(home.toString()));
                 break;
         }
+    }
+
+    void GoToHospital() {
+
+        Location hospital = new Location();
+        //chiedere alle pagine gialle un ospedale disponibile
+        scheduleTask(new WalkingTask(hospital.location));
+
     }
 }

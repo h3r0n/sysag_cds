@@ -3,7 +3,7 @@ package com.sysag_cds;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.TickerBehaviour;
 
-public class Student extends TaskAgent {
+public class Student extends Person {
 
     Location school;
 

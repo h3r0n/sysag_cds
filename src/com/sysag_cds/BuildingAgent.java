@@ -12,7 +12,8 @@ public class BuildingAgent extends Agent {
         Negozio,
         Supermercato,
         Scuola,
-        Fabbrica
+        Fabbrica,
+        Parco
     }
 
     Location position;
