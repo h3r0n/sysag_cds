@@ -1,11 +1,15 @@
 package com.sysag_cds;
 
+import com.google.common.collect.Iterators;
 import jade.core.Agent;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
+import jade.lang.acl.ACLMessage;
+import jade.proto.SubscriptionInitiator;
+import jade.util.leap.Iterator;
 
 public class BuildingAgent extends Agent {
     enum Business{
@@ -13,11 +17,13 @@ public class BuildingAgent extends Agent {
         Supermercato,
         Scuola,
         Fabbrica,
-        Parco
+        Parco,
+        Ospedale
     }
 
+    float distanceDPI= (float) 0.5; //ogni edificio ha un valore di DPI da rispettare o possiede una certa distanza di sicurezza che può essere convertita in DPI
     Location position;
-    Business bus;
+    Building.Business bus;
 
     protected void setup(){
 
@@ -25,29 +31,53 @@ public class BuildingAgent extends Agent {
         //position=
 
     }
-
-    void registerBusinessService() {
-        DFAgentDescription dfd = new DFAgentDescription();
-        dfd.setName(getAID());
+/*
+    void subscribeBusinessService(Business business) {
+        DFAgentDescription template = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
-        sd.setType(String.valueOf(bus));
-        sd.setName(getLocalName());
-        sd.addProperties(new Property("Location", position.toString()));
-        //sd.addProperties(new Property("DPI", 0.5));
-        dfd.addServices(sd);
+        sd.setType(String.valueOf(business));
+        sd.addProperties(new Property("DPI", String.valueOf(DPI));
+        //sd.addProperties(new Property("DPI", String.valueOf(DPI));
+        template.addServices(sd);
 
-        try {
-            DFService.register(this, dfd);
-        } catch (FIPAException fe) {
-            fe.printStackTrace();
-        }
+        SubscriptionInitiator subscription = new SubscriptionInitiator(this, DFService.createSubscriptionMessage(this, getDefaultDF(), template, null)) {
+            protected void handleInform(ACLMessage inform) {
+                try {
+                    DFAgentDescription[] dfds = DFService.decodeNotification(inform.getContent());
+                    for (DFAgentDescription dfd : dfds) {
+                        Iterator allServices = dfd.getAllServices();
+                        while (allServices.hasNext()) {
+                            ServiceDescription sd = (ServiceDescription) allServices.next();
+                            if (Simulation.debug) {
+                                System.out.println("dfd name: " + dfd.getName());
+                                System.out.println("services: " + Iterators.size(allServices));
+                                System.out.println("sd type: " + sd.getType());
+                                System.out.println("sd name:" + sd.getName());
+                                System.out.println("Location: " + ((Property) sd.getAllProperties().next()).getValue());
+                                System.out.println("Received by: " + getLocalName());
+                            }
+                        }
+                    }
+                } catch (FIPAException fe) {
+                    fe.printStackTrace();
+                }
+            }
+        };
+
+        addBehaviour(subscription);
+        subscriptions.add(subscription);
+
     }
 
-    void deregisterBusinessService() {
-        try {
-            DFService.deregister(this);
-        } catch (FIPAException e) {
-            e.printStackTrace();
+    void unsubscribeAll() {
+        if (Simulation.debug)
+            System.out.println(getLocalName() + " unsubscribed");
+
+        for (SubscriptionInitiator s : subscriptions) {
+            s.cancel(getDefaultDF(), true);
         }
+
+        subscriptions.clear();
     }
+ */
 }

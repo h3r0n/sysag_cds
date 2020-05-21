@@ -4,6 +4,7 @@ import com.google.common.collect.Iterators;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
@@ -15,11 +16,16 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
+
+import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+
+import static com.sysag_cds.Simulation.decreeInform;
+import static com.sysag_cds.Simulation.statsInform;
 
 public class Person extends TaskAgent {
 
@@ -36,6 +42,11 @@ public class Person extends TaskAgent {
     static int walkingTime = 1; // tempo per percorrere una strada
     static int deltaResources = 10;   // tempo di aggiornamento risorse
     static int maxfood = 10;    // dimensione riserva beni di prima necessità
+    static int supermarketTicks = 10;
+    static int hospitalTicks = 10;
+    static int randomWalkTicks = 10;
+    static int businessTicks = 10;
+    static int parkTicks = 10;
 
     // status
     int food = maxfood;  // riserva beni di prima necessità
@@ -89,24 +100,38 @@ public class Person extends TaskAgent {
             protected void onTick() {
                 food--;
                 if (food < 0)
-                    food = 0;
+                    goToSupermarket();
             }
         });
 
-        addBehaviour(new TickerBehaviour(this, Simulation.tick * deltaResources) {
+        addBehaviour(new TickerBehaviour(this, Simulation.tick * randomWalkTicks) {
             protected void onTick() {
                System.out.println("Sto aggiungendo un nuovo percorso per l'agente :" + this.myAgent.getLocalName());
                scheduleRandomWalk();
             }
         });
 
-        addBehaviour(new TickerBehaviour(this, Simulation.tick * deltaResources) {
+        addBehaviour(new TickerBehaviour(this, Simulation.tick * hospitalTicks) {
             protected void onTick() {
-                if(IllProbability()==1) {
-                     GoToHospital();
+                if(IllProbability()) {
+                     goToHospital();
                 }
             }
         });
+
+        addBehaviour(new TickerBehaviour(this, Simulation.tick * businessTicks) {
+            protected void onTick() {
+                goToBusiness();
+            }
+        });
+
+        addBehaviour(new TickerBehaviour(this, Simulation.tick * parkTicks) {
+            protected void onTick() {
+                goToPark();
+            }
+        });
+
+        addBehaviour(new manageDecreeDisposition());
 
         if (Simulation.debug)
             System.out.println("Agent " + getLocalName() + " started");
@@ -152,6 +177,7 @@ public class Person extends TaskAgent {
 
     void setInfectious() {
         diseaseStatus = SEIR.INFECTIOUS;
+        sendStatsDeclaration("Infected"); //Manda messaggio ad Agente Statista
         registerContagionService();
 
         if (Simulation.debug)
@@ -179,18 +205,20 @@ public class Person extends TaskAgent {
         if (Simulation.debug)
             System.out.println(getLocalName() + " has recovered");
 
-        if(DeathProbability()==1){
-            this.dead=true;
-            //Manda messaggio ad Agente Statista
+        if(DeathProbability()){
+            sendStatsDeclaration("Death"); //Manda messaggio ad Agente Statista
+            this.doDelete();
+        }else{
+            sendStatsDeclaration("Recovered"); //Manda messaggio ad Agente Statista
         }
     }
 
-    int DeathProbability() {
-        return ThreadLocalRandom.current().nextInt(0, 1);
+    boolean DeathProbability() {
+        return ThreadLocalRandom.current().nextFloat()<0.1;
     }
 
-    int IllProbability() {
-        return ThreadLocalRandom.current().nextInt(0, 1);
+    boolean IllProbability() {
+        return ThreadLocalRandom.current().nextFloat()<0.1;
     }
 
     boolean isRecovered() {
@@ -457,11 +485,159 @@ public class Person extends TaskAgent {
         }
     }
 
-    void GoToHospital() {
+    void goToHospital() {
 
-        Location hospital = new Location();
-        //chiedere alle pagine gialle un ospedale disponibile
+        Location hospital=new Location();
+
+        DFAgentDescription template= new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("Ospedale");
+        template.addServices(sd);
+        List<Location> hospitals = new ArrayList<>();
+        try{
+            DFAgentDescription[] result = DFService.search(this, template);
+            for(int i=0; i<hospitals.size(); i++){
+                Iterator iter=result[i].getAllServices();
+                Property p=(Property) iter.next();
+                if(p.getName().equals("Stato")){
+                    p=(Property) iter.next();
+                }
+                hospitals.add(new Location((String) p.getValue()));
+            }
+
+        }
+        catch(FIPAException fe){
+            fe.printStackTrace();
+        }
+        hospital=findNearestLocation(position,hospitals);
         scheduleTask(new WalkingTask(hospital.location));
+        scheduleTask(new WaitingTask(hospitalTicks*Simulation.tick));
+    }
 
+    Location findNearestLocation(Location position, List<Location> hospitals) {
+        //da definire
+    }
+
+    void goToSupermarket(){
+        Location supermarket = new Location();
+
+        DFAgentDescription template= new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("Supermercato");
+        template.addServices(sd);
+        List<Location> supermarkets = new ArrayList<>();
+        try{
+            DFAgentDescription[] result = DFService.search(this, template);
+            for(int i=0; i<supermarkets.size(); i++){
+                Iterator iter=result[i].getAllServices();
+                Property p=(Property) iter.next();
+                if(p.getName().equals("Stato")){
+                    p=(Property) iter.next();
+                }
+                supermarkets.add(new Location((String) p.getValue()));
+            }
+
+        }
+        catch(FIPAException fe){
+            fe.printStackTrace();
+        }
+        supermarket=findNearestLocation(position,supermarkets);
+        scheduleTask(new WalkingTask(supermarket.toString()));
+        scheduleTask(new WaitingTask(supermarketTicks*Simulation.tick));
+    }
+
+    void goToBusiness(){
+        Location business= new Location();
+        boolean closed=false;
+
+        DFAgentDescription template= new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("Negozio");
+        template.addServices(sd);
+        List<Location> businesses = new ArrayList<>();
+        try{
+            DFAgentDescription[] result = DFService.search(this, template);
+            for(int i=0; i<businesses.size(); i++){
+                Iterator iter=result[i].getAllServices();
+                Property p=(Property) iter.next();
+                if(p.getName().equals("Stato")){
+                    if(p.getValue().equals("Chiuso")){
+                        if(naughty){
+                            businesses.add(new Location((String) p.getValue()));
+                        }
+                    }else{
+                        businesses.add(new Location((String) p.getValue()));
+                    }
+                    p=(Property) iter.next();
+                }
+            }
+
+        }
+        catch(FIPAException fe){
+            fe.printStackTrace();
+        }
+        business=findNearestLocation(position,businesses);
+
+        scheduleTask(new WalkingTask(business.toString()));
+        scheduleTask(new WaitingTask(businessTicks*Simulation.tick));
+
+
+    }
+
+    void goToPark(){
+        Location park= new Location();
+
+        DFAgentDescription template= new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("Parco");
+        template.addServices(sd);
+        List<Location> parks = new ArrayList<>();
+        try{
+            DFAgentDescription[] result = DFService.search(this, template);
+            for(int i=0; i<parks.size(); i++){
+                Iterator iter=result[i].getAllServices();
+                Property p=(Property) iter.next();
+                if(p.getName().equals("Stato")){
+                    if(p.getValue().equals("Chiuso")){
+                        if(naughty){
+                            parks.add(new Location((String) p.getValue()));
+                        }
+                    }else{
+                        parks.add(new Location((String) p.getValue()));
+                    }
+                    p=(Property) iter.next();
+                }
+            }
+
+        }
+        catch(FIPAException fe){
+            fe.printStackTrace();
+        }
+        park=findNearestLocation(position,parks);
+
+        scheduleTask(new WalkingTask(park.toString()));
+        scheduleTask(new WaitingTask(parkTicks*Simulation.tick));
+
+    }
+
+    void sendStatsDeclaration(String s){
+        ACLMessage msg = new ACLMessage(statsInform);
+        msg.addReceiver(pathFinding);
+        msg.setContent(s);
+        send(msg);
+    }
+
+    class manageDecreeDisposition extends CyclicBehaviour {
+        @Override
+        public void action() {
+            MessageTemplate MT1=MessageTemplate.MatchPerformative(decreeInform);
+            ACLMessage msg = myAgent.receive(MT1);
+
+            if (msg != null) {
+                String query = msg.getContent();
+                DPI= Float.parseFloat(query);
+            } else
+                block();
+        }
     }
 }

@@ -1,26 +1,23 @@
 package com.sysag_cds;
 
+import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.TickerBehaviour;
 
-public class Worker extends Person {
+public class Nurse extends Worker {
 
-    Location workingPlace;
-    int workTicks=10;
-    int workInterval=100;
+    Location hospital;
 
     protected void setup() {
         super.setup();
-        addBehaviour(new TickerBehaviour(this, Simulation.tick *workInterval ) {
-            protected void onTick() {
-                work();
-            }
-        } );
-
     }
 
+    @Override
     void work(){
+        float DPIbefore=this.DPI;
         scheduleTask(new WalkingTask(workingPlace.toString()));
+        this.DPI= (float) 0.95;
         scheduleTask(new WaitingTask(Simulation.tick*workTicks));
+        this.DPI= DPIbefore;
         scheduleTask(new WalkingTask(home.toString()));
     }
 
