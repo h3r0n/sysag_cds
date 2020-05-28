@@ -60,7 +60,6 @@ public class Person extends TaskAgent {
     Location home = new Building("testHome");      // residenza
     Location position = home;  // posizione corrente
     List<SubscriptionInitiator> subscriptions = new LinkedList<>(); // lista sottoscrizioni (potenziali contagi)
-    //AID pathFinding;    // agente fornitore del servizio pathfinding
 
     protected void setup() {
 
@@ -95,13 +94,6 @@ public class Person extends TaskAgent {
         }
 
         /*
-
-        // ricerca agente fornitore del servizio pathfinding
-        try {
-            updatePathFinding();
-        } catch (FIPAException e) {
-            e.printStackTrace();
-        }
 
         // aggiornamento risorse
         addBehaviour(new TickerBehaviour(this, Simulation.tick * deltaResources) {
@@ -349,21 +341,7 @@ public class Person extends TaskAgent {
 
         subscriptions.clear();
     }
-/*
-    void updatePathFinding() throws FIPAException {
-        DFAgentDescription dfd = new DFAgentDescription();
-        ServiceDescription sd = new ServiceDescription();
-        sd.setType("PathFinding");
-        dfd.addServices(sd);
 
-        DFAgentDescription[] result = DFService.search(this, dfd);
-        if(result.length!=0) {
-            pathFinding = result[0].getName();
-        }else{
-            //inserire azioni o messaggi alternativi
-        }
-    }
-*/
     // ------------------------------------
     //  Task
     // ------------------------------------
