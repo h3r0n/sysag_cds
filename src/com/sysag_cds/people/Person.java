@@ -1,9 +1,12 @@
-package com.sysag_cds;
+package com.sysag_cds.people;
 
 import com.google.common.collect.Iterators;
+import com.sysag_cds.Simulation;
+import com.sysag_cds.map.Building;
+import com.sysag_cds.map.Location;
+import com.sysag_cds.map.Road;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.core.behaviours.WakerBehaviour;
@@ -29,7 +32,7 @@ import static com.sysag_cds.Simulation.statsInform;
 
 public class Person extends TaskAgent {
 
-    enum SEIR {
+    public enum SEIR {
         SUSCEPTIBLE,
         EXPOSED,
         INFECTIOUS,
@@ -52,7 +55,7 @@ public class Person extends TaskAgent {
     int food = maxfood;  // riserva beni di prima necessità
     boolean dead = false;
     boolean ill = false;
-    boolean naughty= false; // va bene settarlo a false e poi cambiarlo durante la creazione degli agenti?
+    boolean naughty = false; // mancato rispetto dei decreti
     protected SEIR diseaseStatus = SEIR.SUSCEPTIBLE;    // stato di avanzamento della malattia
     float DPI = 0; //valore di DPI impostato inizialmente a zero
     Location home = new Building("testHome");      // residenza
@@ -81,12 +84,18 @@ public class Person extends TaskAgent {
                     setRecovered();
                     break;
             }
-            // il secondo argomento specifica la posizione
-            if (args.length > 1) {
+            // il secondo argomento specifica la casa
+            if (args.length >= 2) {
                 home = new Location((String) args[1]);
                 position = home;
             }
+            // il terzo argomento specifica il rispetto dei decreti
+            if (args.length >= 3 && args[2].equals("True")) {
+                naughty = true;
+            }
         }
+
+        /*
 
         // ricerca agente fornitore del servizio pathfinding
         try {
@@ -133,6 +142,8 @@ public class Person extends TaskAgent {
 
         addBehaviour(new manageDecreeDisposition());
 
+         */
+
         if (Simulation.debug)
             System.out.println("Agent " + getLocalName() + " started");
     }
@@ -177,7 +188,7 @@ public class Person extends TaskAgent {
 
     void setInfectious() {
         diseaseStatus = SEIR.INFECTIOUS;
-        sendStatsDeclaration("Infected"); //Manda messaggio ad Agente Statista
+        //sendStatsDeclaration("Infected"); //Manda messaggio ad Agente Statista
         registerContagionService();
 
         if (Simulation.debug)
@@ -205,12 +216,14 @@ public class Person extends TaskAgent {
         if (Simulation.debug)
             System.out.println(getLocalName() + " has recovered");
 
+        /*
         if(DeathProbability()){
             sendStatsDeclaration("Death"); //Manda messaggio ad Agente Statista
             this.doDelete();
         }else{
             sendStatsDeclaration("Recovered"); //Manda messaggio ad Agente Statista
         }
+        */
     }
 
     boolean DeathProbability() {
@@ -231,7 +244,7 @@ public class Person extends TaskAgent {
 
     void setLocation(Location l) {
 
-        System.out.println("L'agente " + getLocalName() + " si sposta in " + l.location);
+        System.out.println("L'agente " + getLocalName() + " si sposta in " + l.toString());
 
         if (isSusceptible())
             unsubscribeAll();
@@ -411,9 +424,9 @@ public class Person extends TaskAgent {
 
                 // raggiunta nuova location
                 case 2:
-                    if (stages.size() != 0) {
+                    if (stages.peek() != null) {
                         state--;
-                        System.out.println("In transito da :"+stages.peek().location);
+                        System.out.println("In transito da :"+stages.peek().toString());
                         setLocation(stages.poll());
                     } else {
                         state = 3;
@@ -459,6 +472,8 @@ public class Person extends TaskAgent {
         }
     }
 
+    /*
+
     public void scheduleWalkHome() {
         scheduleTask(new WalkingTask(home.toString()));
     }
@@ -487,7 +502,7 @@ public class Person extends TaskAgent {
 
     void goToHospital() {
 
-        Location hospital=new Location();
+        Location hospital=new Location("test");
 
         DFAgentDescription template= new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
@@ -510,16 +525,17 @@ public class Person extends TaskAgent {
             fe.printStackTrace();
         }
         hospital=findNearestLocation(position,hospitals);
-        scheduleTask(new WalkingTask(hospital.location));
+        scheduleTask(new WalkingTask(hospital.toString()));
         scheduleTask(new WaitingTask(hospitalTicks*Simulation.tick));
     }
 
     Location findNearestLocation(Location position, List<Location> hospitals) {
         //da definire
+        return position;
     }
 
     void goToSupermarket(){
-        Location supermarket = new Location();
+        Location supermarket = new Location("test");
 
         DFAgentDescription template= new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
@@ -547,7 +563,7 @@ public class Person extends TaskAgent {
     }
 
     void goToBusiness(){
-        Location business= new Location();
+        Location business= new Location("test");
         boolean closed=false;
 
         DFAgentDescription template= new DFAgentDescription();
@@ -585,7 +601,7 @@ public class Person extends TaskAgent {
     }
 
     void goToPark(){
-        Location park= new Location();
+        Location park= new Location("test");
 
         DFAgentDescription template= new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
@@ -640,4 +656,6 @@ public class Person extends TaskAgent {
                 block();
         }
     }
+
+     */
 }

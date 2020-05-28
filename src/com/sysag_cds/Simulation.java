@@ -1,22 +1,16 @@
 package com.sysag_cds;
 
+import com.sysag_cds.map.Building;
+import com.sysag_cds.map.BuildingFactory;
+import com.sysag_cds.map.Road;
+import com.sysag_cds.map.RoadFactory;
+import com.sysag_cds.people.Person;
 import edu.uci.ics.jung.algorithms.generators.Lattice2DGenerator;
 import edu.uci.ics.jung.algorithms.shortestpath.DijkstraShortestPath;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.UndirectedSparseGraph;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.BackEndContainer;
-import jade.core.behaviours.Behaviour;
-import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.WakerBehaviour;
-import jade.domain.DFService;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.Property;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
-import jade.domain.FIPAException;
-import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
@@ -29,28 +23,28 @@ import java.util.Random;
 
 public class Simulation extends Agent {
     public static int tick = 1000;
-    public static int decreeTick=10;
+    public static int decreeTick = 10;
     public static boolean debug = true;
+    public static int buildingInform = 20;
+    public static int statsInform = 21;
+    public static int decreeInform = 22;
     public int deathCounts = 0;
     public int recoveredCounts = 0;
     public int infectedCounts = 0;
-    public static int buildingInform=20;
-    public static int statsInform=21;
-    public static int decreeInform=22;
-
     protected int nPeople = 1;
     protected double[] diseaseDistribution = new double[4];
     protected int mapSize;     // la mappa è un quadrato, mapSize è il numero di Building per lato
+    protected double naughtyProb;
 
-    Graph<Building,Road> map;
+    Graph<Building, Road> map;
 
     List<Building> buildings = new ArrayList<>();
-    List<AID> agents= new ArrayList<>();
+    List<AID> agents = new ArrayList<>();
 
-    protected void setup()  {
+    protected void setup() {
 
-        registerPathFindingService();
-        addBehaviour(new managePathFindingRequest());
+        //registerPathFindingService();
+        //addBehaviour(new managePathFindingRequest());
         /*
         registerFactoryBuildingFindingService();
         registerParkBuildingFindingService();
@@ -59,33 +53,33 @@ public class Simulation extends Agent {
         registerSchoolBuildingFindingService();
         registerHospitalBuildingFindingService();
          */
-        registerBuildingFindingService();
-        addBehaviour(new manageBuildingFindingRequest());
+        //registerBuildingFindingService();
+        //addBehaviour(new manageBuildingFindingRequest());
 
-        registerGrimReaperService();
-        addBehaviour(new manageStatsCounts());
+        //registerGrimReaperService();
+        //addBehaviour(new manageStatsCounts());
 
         readArgs(getArguments());
         List<Building> buildingList = new ArrayList<>();
         buildMap(buildingList);
         createPeople(buildingList);
 
+        /*
         addBehaviour(new WakerBehaviour(this, Simulation.tick * decreeTick) {
             @Override
             protected void onWake() {
                 Decree();
             }
         });
-
-
-        //Siccome vengono create prima le persone del servizio gps, talvolta le persone lo chiamano prima che sia registrato il servizio, invertire l'ordine?
+        */
     }
 
     /*
         Parametri di Simulation:
             [0] numero di Person
             [2-4] probabilità di avere persone SUSCEPTIBLE,EXPOSED,INFECTIOUS,RECOVERED
-            [5] numero di Building per lato, considerando che la mappa è un quadrato. Deve essere >= 2
+            [5] probabilità di avere persone che non rispettano i decreti (tra 0 e 1)
+            [6] numero di Building per lato, considerando che la mappa è un quadrato. Deve essere >= 2
 
         Esempio: -agents simulation:com.sysag_cds.Simulation(1,.5,0,.5,0,2)
             Crea 1 agente Person, con il 50% di probabilità di essere SUSCEPTIBLE e il 50% di essere INFECTIOUS
@@ -98,6 +92,7 @@ public class Simulation extends Agent {
         diseaseDistribution[Person.SEIR.EXPOSED.ordinal()] = Double.parseDouble((String) args[2]);
         diseaseDistribution[Person.SEIR.INFECTIOUS.ordinal()] = Double.parseDouble((String) args[3]);
         diseaseDistribution[Person.SEIR.RECOVERED.ordinal()] = Double.parseDouble((String) args[4]);
+        naughtyProb = Double.parseDouble((String) args[4]);
         mapSize = Integer.parseInt((String) args[5]);
     }
 
@@ -120,19 +115,20 @@ public class Simulation extends Agent {
     void createPeople(List<Building> buildingList) {
 
         ContainerController c = getContainerController();
-        Object [] personArgs = new Object[2];
+        Object[] personArgs = new Object[3];
         Random rand = new Random();
-        String[] diseaseStatus = new String[]{"SUSCEPTIBLE","EXPOSED","INFECTIOUS","RECOVERED"};
-        int[] dsIndex = new int[]{0,1,2,3};
-        EnumeratedIntegerDistribution distribution = new EnumeratedIntegerDistribution(dsIndex,diseaseDistribution);
 
+        String[] diseaseStatus = new String[]{"SUSCEPTIBLE", "EXPOSED", "INFECTIOUS", "RECOVERED"};
+        int[] dsIndex = new int[]{0, 1, 2, 3};
+        EnumeratedIntegerDistribution distribution = new EnumeratedIntegerDistribution(dsIndex, diseaseDistribution);
 
-
-        for (int i = 0; i<nPeople; i++) {
+        for (int i = 0; i < nPeople; i++) {
             personArgs[0] = diseaseStatus[distribution.sample()];    // assegna uno stato di salute casuale
             personArgs[1] = buildingList.get(rand.nextInt(buildingList.size())).toString();   // assegna una casa casuale
+            personArgs[2] = (rand.nextFloat() < naughtyProb) ? "True" : "False";
+
             try {
-                AgentController a = c.createNewAgent( "p"+i, "com.sysag_cds.Person", personArgs);
+                AgentController a = c.createNewAgent("p" + i, "com.sysag_cds.people.Person", personArgs);
                 a.start();
             } catch (StaleProxyException e) {
                 e.printStackTrace();
@@ -141,7 +137,7 @@ public class Simulation extends Agent {
     }
 
     String getPath(String begin, String end) {
-        List<Road> list = (new DijkstraShortestPath<>(map)).getPath(new Building(begin),new Building(end));
+        List<Road> list = (new DijkstraShortestPath<>(map)).getPath(new Building(begin), new Building(end));
         Iterator<Road> iterator = list.iterator();
         StringBuilder path = new StringBuilder();
 
@@ -154,6 +150,9 @@ public class Simulation extends Agent {
 
         return path.toString();
     }
+
+
+    /*
 
     // trova il percorso minimo data la posizione dell'agente e il tipo di negozio che vuole raggiungere
     //Funzione da modificare
@@ -213,10 +212,10 @@ public class Simulation extends Agent {
             DFAgentDescription dfd = new DFAgentDescription();
             dfd.setName(getAID());
             ServiceDescription sd = new ServiceDescription();
-            sd.setType(buildings.get(i).bus.toString());
+            //sd.setType(buildings.get(i).bus.toString());
             sd.addProperties(new Property("Stato", "Aperto"));
-            sd.addProperties(new Property("Posizione", buildings.get(i).location));
-            sd.addProperties(new Property("Distanza", buildings.get(i).distanceDPI));
+            sd.addProperties(new Property("Posizione", buildings.get(i).toString()));
+            //sd.addProperties(new Property("Distanza", buildings.get(i).distanceDPI));
             sd.setName(getLocalName());
             //sd.addProperties(new Property("Location", position.toString()));
             //sd.addProperties(new Property("DPI", 0.5));
@@ -338,7 +337,7 @@ public class Simulation extends Agent {
             fe.printStackTrace();
         }
     }
-*/
+*/  /*
     class manageBuildingFindingRequest extends CyclicBehaviour {
         @Override
         public void action() {
@@ -492,4 +491,6 @@ public class Simulation extends Agent {
         }
         send(msg);
     }
+
+    */
 }
