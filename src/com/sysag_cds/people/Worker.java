@@ -21,9 +21,9 @@ public class Worker extends Person {
     }
 
     void work(){
-        scheduleTask(new WalkingTask(workingPlace.toString()));
-        scheduleTask(new WaitingTask(Simulation.tick*workTicks));
-        scheduleTask(new WalkingTask(home.toString()));
+        scheduleTask(new WalkingTask(this,workingPlace.toString()));
+        scheduleTask(new WaitingTask(this,Simulation.tick*workTicks));
+        scheduleTask(new WalkingTask(this,home.toString()));
     }
 
 }

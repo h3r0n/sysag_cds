@@ -14,11 +14,11 @@ public class Nurse extends Worker {
     @Override
     void work(){
         float DPIbefore=this.DPI;
-        scheduleTask(new WalkingTask(workingPlace.toString()));
+        scheduleTask(new WalkingTask(this,workingPlace.toString()));
         this.DPI= (float) 0.95;
-        scheduleTask(new WaitingTask(Simulation.tick*workTicks));
+        scheduleTask(new WaitingTask(this,Simulation.tick*workTicks));
         this.DPI= DPIbefore;
-        scheduleTask(new WalkingTask(home.toString()));
+        scheduleTask(new WalkingTask(this,home.toString()));
     }
 
 }

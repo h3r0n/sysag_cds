@@ -28,6 +28,10 @@ public class World {
         }
     }
 
+    public static World getInstance() {
+        return instance;
+    }
+
     private void buildMap(int mapSize) {
 
         map = (
@@ -48,7 +52,7 @@ public class World {
         return buildingList;
     }
 
-    String getPath(String begin, String end) {
+    public String getPath(String begin, String end) {
         List<Road> list = (new DijkstraShortestPath<>(map)).getPath(new Building(begin), new Building(end));
         Iterator<Road> iterator = list.iterator();
         StringBuilder path = new StringBuilder();

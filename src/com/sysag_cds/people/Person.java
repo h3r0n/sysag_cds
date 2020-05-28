@@ -2,11 +2,17 @@ package com.sysag_cds.people;
 
 import com.google.common.collect.Iterators;
 import com.sysag_cds.Simulation;
+import com.sysag_cds.behaviour.DelayBehaviour;
+import com.sysag_cds.behaviour.TaskAgent;
 import com.sysag_cds.map.Building;
 import com.sysag_cds.map.Location;
 import com.sysag_cds.map.Road;
+import com.sysag_cds.map.World;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.SequentialBehaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -54,7 +60,7 @@ public class Person extends TaskAgent {
     Location home = new Building("testHome");      // residenza
     Location position = home;  // posizione corrente
     List<SubscriptionInitiator> subscriptions = new LinkedList<>(); // lista sottoscrizioni (potenziali contagi)
-    AID pathFinding;    // agente fornitore del servizio pathfinding
+    //AID pathFinding;    // agente fornitore del servizio pathfinding
 
     protected void setup() {
 
@@ -218,7 +224,7 @@ public class Person extends TaskAgent {
         }
         */
     }
-
+/*
     boolean DeathProbability() {
         return ThreadLocalRandom.current().nextFloat()<0.1;
     }
@@ -230,7 +236,7 @@ public class Person extends TaskAgent {
     boolean isRecovered() {
         return diseaseStatus == SEIR.RECOVERED;
     }
-
+*/
     // ------------------------------------
     //  Spostamenti
     // ------------------------------------
@@ -343,7 +349,7 @@ public class Person extends TaskAgent {
 
         subscriptions.clear();
     }
-
+/*
     void updatePathFinding() throws FIPAException {
         DFAgentDescription dfd = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
@@ -357,120 +363,55 @@ public class Person extends TaskAgent {
             //inserire azioni o messaggi alternativi
         }
     }
-
+*/
     // ------------------------------------
     //  Task
     // ------------------------------------
 
-    class WalkingTask extends Task {
-
-        Queue<Road> stages = new LinkedList<>();
-        String destination;
-        int state = 0;
-
-        public WalkingTask(String destination) {
-            super();
-            this.destination = destination;
-        }
+    class WalkingTask extends SequentialBehaviour {
 
         public WalkingTask(Agent a, String destination) {
             super(a);
-            this.destination = destination;
-        }
 
-        @Override
-        public void onStart() {
-            //assert pathFinding != null;
-            ACLMessage msg = new ACLMessage(ACLMessage.QUERY_REF);
-            msg.addReceiver(pathFinding);
-            msg.setContent(position.toString() + "," + destination);
-            send(msg);
-        }
+            addSubBehaviour(new OneShotBehaviour() {
+                @Override
+                public void action() {
+                    String path = World.getInstance().getPath(position.toString(), destination);
+                    String[] roads = path.split(",");
 
-        @Override
-        public void action() {
-            switch (state) {
-                // attende il messaggio contenente il path
-                case 0:
-                    MessageTemplate MT1 = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
-                    MessageTemplate MT2 = MessageTemplate.MatchSender(pathFinding);
-                    ACLMessage msg = myAgent.receive(MessageTemplate.and(MT1, MT2));
-
-                    if (msg != null) {
-                        String[] roads = msg.getContent().split(",");
-                        for (String s : roads) {
-                            stages.add(new Road(s));
+                    for (String r : roads) {
+                        addSubBehaviour(new DelayBehaviour(myAgent, Simulation.tick * walkingTime) {
+                            @Override
+                            protected void onWake() {
+                                setLocation(new Location(r));
+                            }
+                        });
+                    }
+                    addSubBehaviour(new DelayBehaviour(myAgent, Simulation.tick * walkingTime) {
+                        @Override
+                        protected void onWake() {
+                            setLocation(new Location(destination));
                         }
-                        state++;
-                    } else {
-                        System.out.println("Non ricevo nulla dal GPS");
-                        block();
-                    }
-                    break;
-
-                // in cammino
-                case 1:
-                    state++;
-                    System.out.println("In attesa sulla strada");
-                    block(Simulation.tick * walkingTime);
-                    break;
-
-                // raggiunta nuova location
-                case 2:
-                    if (stages.peek() != null) {
-                        state--;
-                        System.out.println("In transito da :"+stages.peek().toString());
-                        setLocation(stages.poll());
-                    } else {
-                        state = 3;
-                        System.out.println("Arrivato a destinazione: "+destination);
-                        setLocation(new Building(destination));
-                    }
-                    break;
-            }
-        }
-
-        @Override
-        public boolean done() {
-            return state == 3;
+                    });
+                }
+            });
         }
     }
 
-    class WaitingTask extends Task {
+    class WaitingTask extends DelayBehaviour {
 
         boolean wait = true;
         int ticks;
 
-        public WaitingTask(int ticks) {
-            super();
-            this.ticks = ticks;
-        }
-
         public WaitingTask(Agent a, int ticks) {
-            super(a);
-            this.ticks = ticks;
-        }
-
-        @Override
-        public void action() {
-            if (wait) {
-                wait = false;
-                block(Simulation.tick);
-            }
-        }
-
-        @Override
-        public boolean done() {
-            return !wait;
+            super(a, Simulation.tick * ticks);
         }
     }
-
-    /*
 
     public void scheduleWalkHome() {
-        scheduleTask(new WalkingTask(home.toString()));
+        scheduleTask(new WalkingTask(this,home.toString()));
     }
-
+    /*
     public void scheduleRandomWalk() {
         int randomNum = ThreadLocalRandom.current().nextInt(1, 5);
         System.out.println(randomNum);

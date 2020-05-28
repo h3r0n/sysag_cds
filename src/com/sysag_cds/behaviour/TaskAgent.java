@@ -7,7 +7,7 @@ import jade.core.behaviours.SequentialBehaviour;
 abstract public class TaskAgent extends Agent {
     SequentialBehaviour todo = null;
 
-    void scheduleTask(Behaviour t) {
+    public void scheduleTask(Behaviour t) {
         if (todo == null) {
             todo = new SequentialBehaviour();
             this.addBehaviour(todo);
