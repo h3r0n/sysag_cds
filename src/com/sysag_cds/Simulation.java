@@ -1,25 +1,17 @@
 package com.sysag_cds;
 
 import com.sysag_cds.map.Building;
-import com.sysag_cds.map.BuildingFactory;
-import com.sysag_cds.map.Road;
-import com.sysag_cds.map.RoadFactory;
+import com.sysag_cds.map.BuildingProbability;
+import com.sysag_cds.map.World;
+import com.sysag_cds.people.NaughtyProbability;
 import com.sysag_cds.people.Person;
-import edu.uci.ics.jung.algorithms.generators.Lattice2DGenerator;
-import edu.uci.ics.jung.algorithms.shortestpath.DijkstraShortestPath;
-import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.graph.UndirectedSparseGraph;
+import com.sysag_cds.people.PersonFactory;
+import com.sysag_cds.people.SEIRProbability;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.wrapper.AgentController;
-import jade.wrapper.ContainerController;
-import jade.wrapper.StaleProxyException;
-import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 
 public class Simulation extends Agent {
     public static int tick = 1000;
@@ -31,15 +23,16 @@ public class Simulation extends Agent {
     public int deathCounts = 0;
     public int recoveredCounts = 0;
     public int infectedCounts = 0;
-    protected int nPeople = 1;
+
+    protected int nPeople;
     protected double[] diseaseDistribution = new double[4];
     protected int mapSize;     // la mappa è un quadrato, mapSize è il numero di Building per lato
     protected double naughtyProb;
 
-    Graph<Building, Road> map;
+    World map;
 
-    List<Building> buildings = new ArrayList<>();
-    List<AID> agents = new ArrayList<>();
+    List<Building> buildings;
+    List<AID> people = new ArrayList<>();
 
     protected void setup() {
 
@@ -60,9 +53,8 @@ public class Simulation extends Agent {
         //addBehaviour(new manageStatsCounts());
 
         readArgs(getArguments());
-        List<Building> buildingList = new ArrayList<>();
-        buildMap(buildingList);
-        createPeople(buildingList);
+        map = World.getInstance(mapSize);
+        createPeople();
 
         /*
         addBehaviour(new WakerBehaviour(this, Simulation.tick * decreeTick) {
@@ -96,59 +88,17 @@ public class Simulation extends Agent {
         mapSize = Integer.parseInt((String) args[5]);
     }
 
-    void buildMap(List<Building> buildingList) {
+    void createPeople() {
 
-        map = (
-                new Lattice2DGenerator<>(UndirectedSparseGraph.getFactory(),
-                        new BuildingFactory(buildingList),
-                        new RoadFactory(),
-                        mapSize, false
-                )
-        ).get();
+        PersonFactory pf = new PersonFactory(
+                this,
+                new BuildingProbability(map),
+                new SEIRProbability(diseaseDistribution[0], diseaseDistribution[1], diseaseDistribution[2], diseaseDistribution[3]),
+                new NaughtyProbability(naughtyProb)
+        );
 
-        if (Simulation.debug) {
-            System.out.println(map.toString());
-            System.out.println("Vertices=Building, Edges=Roads");
-        }
-    }
-
-    void createPeople(List<Building> buildingList) {
-
-        ContainerController c = getContainerController();
-        Object[] personArgs = new Object[3];
-        Random rand = new Random();
-
-        String[] diseaseStatus = new String[]{"SUSCEPTIBLE", "EXPOSED", "INFECTIOUS", "RECOVERED"};
-        int[] dsIndex = new int[]{0, 1, 2, 3};
-        EnumeratedIntegerDistribution distribution = new EnumeratedIntegerDistribution(dsIndex, diseaseDistribution);
-
-        for (int i = 0; i < nPeople; i++) {
-            personArgs[0] = diseaseStatus[distribution.sample()];    // assegna uno stato di salute casuale
-            personArgs[1] = buildingList.get(rand.nextInt(buildingList.size())).toString();   // assegna una casa casuale
-            personArgs[2] = (rand.nextFloat() < naughtyProb) ? "True" : "False";
-
-            try {
-                AgentController a = c.createNewAgent("p" + i, "com.sysag_cds.people.Person", personArgs);
-                a.start();
-            } catch (StaleProxyException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    String getPath(String begin, String end) {
-        List<Road> list = (new DijkstraShortestPath<>(map)).getPath(new Building(begin), new Building(end));
-        Iterator<Road> iterator = list.iterator();
-        StringBuilder path = new StringBuilder();
-
-        if (iterator.hasNext())
-            path.append(iterator.next());
-        while (iterator.hasNext()) {
-            path.append(",");
-            path.append(iterator.next().toString());
-        }
-
-        return path.toString();
+        for (int i = 0; i < nPeople; i++)
+            pf.create();
     }
 
 
