@@ -1,8 +1,12 @@
-package com.sysag_cds.behaviour;
+package com.sysag_cds.scheduling;
 
 import jade.core.Agent;
 import jade.core.behaviours.SimpleBehaviour;
 
+/**
+ * Simile a WakerBehaviour, ma il delay parte dal momento in cui il behaviour si attiva, e non nel momento in cui
+ * viene creato
+ */
 public abstract class DelayBehaviour extends SimpleBehaviour {
     private long timeout, wakeupTime;
     private boolean finished;
@@ -26,7 +30,10 @@ public abstract class DelayBehaviour extends SimpleBehaviour {
             block(dt);
     }
 
-    protected void onWake() {}
+    /**
+     * Funzione chiamata in seguito al delay
+     */
+    abstract protected void onWake();
 
     public void reset(long timeout) {
         wakeupTime = System.currentTimeMillis() + timeout;

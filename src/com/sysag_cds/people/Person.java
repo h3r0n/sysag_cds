@@ -2,15 +2,12 @@ package com.sysag_cds.people;
 
 import com.google.common.collect.Iterators;
 import com.sysag_cds.Simulation;
-import com.sysag_cds.behaviour.DelayBehaviour;
-import com.sysag_cds.behaviour.TaskAgent;
+import com.sysag_cds.scheduling.DelayBehaviour;
+import com.sysag_cds.scheduling.TaskAgent;
 import com.sysag_cds.map.Building;
 import com.sysag_cds.map.Location;
-import com.sysag_cds.map.Road;
 import com.sysag_cds.map.World;
-import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
 import jade.core.behaviours.WakerBehaviour;
@@ -20,14 +17,11 @@ import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 import jade.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class Person extends TaskAgent {
 
@@ -61,6 +55,7 @@ public class Person extends TaskAgent {
     Location position = home;  // posizione corrente
     List<SubscriptionInitiator> subscriptions = new LinkedList<>(); // lista sottoscrizioni (potenziali contagi)
 
+    @Override
     protected void setup() {
 
         // inizializzazione agente
@@ -384,6 +379,9 @@ public class Person extends TaskAgent {
         public WaitingTask(Agent a, int ticks) {
             super(a, Simulation.tick * ticks);
         }
+
+        @Override
+        protected void onWake() {}
     }
 
     public void scheduleWalkHome() {
