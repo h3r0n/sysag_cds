@@ -1,7 +1,7 @@
-package com.sysag_cds;
+package com.sysag_cds.people;
 
-import jade.core.behaviours.Behaviour;
-import jade.core.behaviours.TickerBehaviour;
+import com.sysag_cds.Simulation;
+import com.sysag_cds.map.Location;
 
 public class Nurse extends Worker {
 

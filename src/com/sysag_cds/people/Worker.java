@@ -1,5 +1,7 @@
-package com.sysag_cds;
+package com.sysag_cds.people;
 
+import com.sysag_cds.Simulation;
+import com.sysag_cds.map.Location;
 import jade.core.behaviours.TickerBehaviour;
 
 public class Worker extends Person {

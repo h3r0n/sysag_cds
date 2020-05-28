@@ -1,4 +1,4 @@
-package com.sysag_cds;
+package com.sysag_cds.map;
 
 public class Road extends Location {
 

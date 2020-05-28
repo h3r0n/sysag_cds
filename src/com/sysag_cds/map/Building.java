@@ -1,4 +1,4 @@
-package com.sysag_cds;
+package com.sysag_cds.map;
 
 public class Building extends Location {
 
@@ -12,7 +12,7 @@ public class Building extends Location {
     }
 
     float distanceDPI= (float) 0.5; //ogni edificio ha un valore di DPI da rispettare o possiede una certa distanza di sicurezza che può essere convertita in DPI
-    Business bus;
+    public Business bus;
 
     public Building(String l) {
         super(l);

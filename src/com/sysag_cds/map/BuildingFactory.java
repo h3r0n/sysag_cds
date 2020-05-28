@@ -1,4 +1,4 @@
-package com.sysag_cds;
+package com.sysag_cds.map;
 
 import com.google.common.base.Supplier;
 import java.util.List;
@@ -10,7 +10,7 @@ public class BuildingFactory implements Supplier<Building> {
 
     BuildingFactory() {}
 
-    BuildingFactory(List<Building> l) {
+    public BuildingFactory(List<Building> l) {
         list = l;
     }
 

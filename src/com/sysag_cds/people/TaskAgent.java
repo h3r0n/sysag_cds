@@ -1,4 +1,4 @@
-package com.sysag_cds;
+package com.sysag_cds.people;
 
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;

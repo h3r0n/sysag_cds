@@ -1,15 +1,6 @@
-package com.sysag_cds;
+package com.sysag_cds.map;
 
-import com.google.common.collect.Iterators;
 import jade.core.Agent;
-import jade.domain.DFService;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.Property;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
-import jade.domain.FIPAException;
-import jade.lang.acl.ACLMessage;
-import jade.proto.SubscriptionInitiator;
-import jade.util.leap.Iterator;
 
 public class BuildingAgent extends Agent {
     enum Business{
