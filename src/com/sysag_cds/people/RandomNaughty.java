@@ -2,12 +2,12 @@ package com.sysag_cds.people;
 
 import java.util.Random;
 
-public class NaughtyProbability {
+public class RandomNaughty {
 
     Double prob;
     Random rand;
 
-    public NaughtyProbability(Double naughtyProb) {
+    public RandomNaughty(Double naughtyProb) {
         prob = naughtyProb;
         rand = new Random();
     }

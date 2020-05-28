@@ -3,12 +3,12 @@ package com.sysag_cds.map;
 import java.util.List;
 import java.util.Random;
 
-public class BuildingProbability {
+public class RandomBuilding {
     Double prob;
     Random rand;
     List<Building> buildings;
 
-    public BuildingProbability(World w) {
+    public RandomBuilding(World w) {
         buildings = w.getBuildings();
         rand = new Random();
     }

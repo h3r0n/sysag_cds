@@ -1,7 +1,6 @@
 package com.sysag_cds.people;
 
-import com.sysag_cds.map.BuildingProbability;
-import jade.core.AID;
+import com.sysag_cds.map.RandomBuilding;
 import jade.core.Agent;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
@@ -11,14 +10,14 @@ public class PersonFactory {
 
     protected int count = 0;
 
-    SEIRProbability seirProb;
-    NaughtyProbability naughtyProb;
-    BuildingProbability buildingProb;
+    RandomSEIR seirProb;
+    RandomNaughty naughtyProb;
+    RandomBuilding buildingProb;
 
     ContainerController c;
     Object[] personArgs = new Object[3];
 
-    public PersonFactory(Agent creator, BuildingProbability bp, SEIRProbability sp, NaughtyProbability np) {
+    public PersonFactory(Agent creator, RandomBuilding bp, RandomSEIR sp, RandomNaughty np) {
         c = creator.getContainerController();
         buildingProb = bp;
         seirProb = sp;

@@ -1,12 +1,12 @@
 package com.sysag_cds;
 
 import com.sysag_cds.map.Building;
-import com.sysag_cds.map.BuildingProbability;
+import com.sysag_cds.map.RandomBuilding;
 import com.sysag_cds.map.World;
-import com.sysag_cds.people.NaughtyProbability;
+import com.sysag_cds.people.RandomNaughty;
 import com.sysag_cds.people.Person;
 import com.sysag_cds.people.PersonFactory;
-import com.sysag_cds.people.SEIRProbability;
+import com.sysag_cds.people.RandomSEIR;
 import jade.core.AID;
 import jade.core.Agent;
 
@@ -92,9 +92,9 @@ public class Simulation extends Agent {
 
         PersonFactory pf = new PersonFactory(
                 this,
-                new BuildingProbability(map),
-                new SEIRProbability(diseaseDistribution[0], diseaseDistribution[1], diseaseDistribution[2], diseaseDistribution[3]),
-                new NaughtyProbability(naughtyProb)
+                new RandomBuilding(map),
+                new RandomSEIR(diseaseDistribution[0], diseaseDistribution[1], diseaseDistribution[2], diseaseDistribution[3]),
+                new RandomNaughty(naughtyProb)
         );
 
         for (int i = 0; i < nPeople; i++)

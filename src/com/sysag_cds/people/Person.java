@@ -5,11 +5,8 @@ import com.sysag_cds.Simulation;
 import com.sysag_cds.map.Building;
 import com.sysag_cds.map.Location;
 import com.sysag_cds.map.Road;
-import com.sysag_cds.map.World;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.TickerBehaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -20,17 +17,11 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
-import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
-
-import java.util.ArrayList;
-import java.util.concurrent.ThreadLocalRandom;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-
-import static com.sysag_cds.Simulation.decreeInform;
-import static com.sysag_cds.Simulation.statsInform;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Person extends TaskAgent {
 
