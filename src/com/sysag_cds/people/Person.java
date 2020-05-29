@@ -8,6 +8,7 @@ import com.sysag_cds.world.Building;
 import com.sysag_cds.world.Location;
 import com.sysag_cds.world.World;
 import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
 import jade.core.behaviours.WakerBehaviour;
@@ -357,6 +358,7 @@ public class Person extends TaskAgent {
             addSubBehaviour(new OneShotBehaviour() {
                 @Override
                 public void action() {
+                    // in questo modo il calcolo del percorso verrà effettuato quando schedulato
                     String path = World.getInstance().getPath((Building) position, destination);
                     String[] roads = path.split(",");
 
@@ -395,6 +397,23 @@ public class Person extends TaskAgent {
         protected void onWake() {}
     }
 
+    class WalkBusinessTask extends SequentialBehaviour implements Task {
+
+        public WalkBusinessTask(Agent a, String category) {
+            super(a);
+
+            addSubBehaviour(new OneShotBehaviour() {
+                @Override
+                public void action() {
+                    // in questo modo la ricerca della destinazione verrà effettuata quando schedulato
+                    Building destination = findNearestBusiness(category);
+                    if (destination != null)
+                        addSubBehaviour(new WalkingTask(myAgent,destination));
+                }
+            });
+        }
+    }
+
     public void scheduleWalkHome() {
         scheduleTask(new WalkingTask(this,home));
     }
@@ -421,40 +440,6 @@ public class Person extends TaskAgent {
         }
     }
 
-    void goToHospital() {
-
-        Location hospital=new Location("test");
-
-        DFAgentDescription template= new DFAgentDescription();
-        ServiceDescription sd = new ServiceDescription();
-        sd.setType("Ospedale");
-        template.addServices(sd);
-        List<Location> hospitals = new ArrayList<>();
-        try{
-            DFAgentDescription[] result = DFService.search(this, template);
-            for(int i=0; i<hospitals.size(); i++){
-                Iterator iter=result[i].getAllServices();
-                Property p=(Property) iter.next();
-                if(p.getName().equals("Stato")){
-                    p=(Property) iter.next();
-                }
-                hospitals.add(new Location((String) p.getValue()));
-            }
-
-        }
-        catch(FIPAException fe){
-            fe.printStackTrace();
-        }
-        hospital=findNearestLocation(position,hospitals);
-        scheduleTask(new WalkingTask(hospital.toString()));
-        scheduleTask(new WaitingTask(hospitalTicks*Simulation.tick));
-    }
-
-    Location findNearestLocation(Location position, List<Location> hospitals) {
-        //da definire
-        return position;
-    }
-
     */
 
     /**
@@ -463,7 +448,7 @@ public class Person extends TaskAgent {
      * @param category categoria del Business
      * @return indirizzo del Business più vicino. null se non esiste
      */
-    Location findNearestBusiness(String category) {
+    Building findNearestBusiness(String category) {
 
         List<Building> results = new LinkedList<>();
         Building closest = null;
@@ -518,108 +503,6 @@ public class Person extends TaskAgent {
     }
 
     /*
-
-    void goToSupermarket(){
-        Location supermarket = new Location("test");
-
-        DFAgentDescription template= new DFAgentDescription();
-        ServiceDescription sd = new ServiceDescription();
-        sd.setType("Supermercato");
-        template.addServices(sd);
-        List<Location> supermarkets = new ArrayList<>();
-        try{
-            DFAgentDescription[] result = DFService.search(this, template);
-            for(int i=0; i<supermarkets.size(); i++){
-                Iterator iter=result[i].getAllServices();
-                Property p=(Property) iter.next();
-                if(p.getName().equals("Stato")){
-                    p=(Property) iter.next();
-                }
-                supermarkets.add(new Location((String) p.getValue()));
-            }
-
-        }
-        catch(FIPAException fe){
-            fe.printStackTrace();
-        }
-        supermarket=findNearestLocation(position,supermarkets);
-        scheduleTask(new WalkingTask(supermarket.toString()));
-        scheduleTask(new WaitingTask(supermarketTicks*Simulation.tick));
-    }
-
-    void goToBusiness(){
-        Location business= new Location("test");
-        boolean closed=false;
-
-        DFAgentDescription template= new DFAgentDescription();
-        ServiceDescription sd = new ServiceDescription();
-        sd.setType("Negozio");
-        template.addServices(sd);
-        List<Location> businesses = new ArrayList<>();
-        try{
-            DFAgentDescription[] result = DFService.search(this, template);
-            for(int i=0; i<businesses.size(); i++){
-                Iterator iter=result[i].getAllServices();
-                Property p=(Property) iter.next();
-                if(p.getName().equals("Stato")){
-                    if(p.getValue().equals("Chiuso")){
-                        if(naughty){
-                            businesses.add(new Location((String) p.getValue()));
-                        }
-                    }else{
-                        businesses.add(new Location((String) p.getValue()));
-                    }
-                    p=(Property) iter.next();
-                }
-            }
-
-        }
-        catch(FIPAException fe){
-            fe.printStackTrace();
-        }
-        business=findNearestLocation(position,businesses);
-
-        scheduleTask(new WalkingTask(business.toString()));
-        scheduleTask(new WaitingTask(businessTicks*Simulation.tick));
-
-
-    }
-
-    void goToPark(){
-        Location park= new Location("test");
-
-        DFAgentDescription template= new DFAgentDescription();
-        ServiceDescription sd = new ServiceDescription();
-        sd.setType("Parco");
-        template.addServices(sd);
-        List<Location> parks = new ArrayList<>();
-        try{
-            DFAgentDescription[] result = DFService.search(this, template);
-            for(int i=0; i<parks.size(); i++){
-                Iterator iter=result[i].getAllServices();
-                Property p=(Property) iter.next();
-                if(p.getName().equals("Stato")){
-                    if(p.getValue().equals("Chiuso")){
-                        if(naughty){
-                            parks.add(new Location((String) p.getValue()));
-                        }
-                    }else{
-                        parks.add(new Location((String) p.getValue()));
-                    }
-                    p=(Property) iter.next();
-                }
-            }
-
-        }
-        catch(FIPAException fe){
-            fe.printStackTrace();
-        }
-        park=findNearestLocation(position,parks);
-
-        scheduleTask(new WalkingTask(park.toString()));
-        scheduleTask(new WaitingTask(parkTicks*Simulation.tick));
-
-    }
 
     void sendStatsDeclaration(String s){
         ACLMessage msg = new ACLMessage(statsInform);
