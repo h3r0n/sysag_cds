@@ -22,6 +22,7 @@ import jade.util.leap.Iterator;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 public class Person extends TaskAgent {
 
@@ -36,13 +37,26 @@ public class Person extends TaskAgent {
     static int seirDelta = 2;   // tempo di incubazione (da EXPOSED a INFECTIOUS)
     static int seirGamma = 100;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
     static int walkingTime = 1; // tempo per percorrere una strada
-    static int deltaResources = 10;   // tempo di aggiornamento risorse
+
+    static int goSupermarketTicks = 10;
+    static int staySupermarketTicks = 10;
+    boolean goingSuperMarket = false;
+
+    static int goHospitalTicks = 10;
+    static int stayHospitalTicks = 10;
+
+
+    static int resourcesTicks = 10;   // tempo di aggiornamento risorse
     static int maxfood = 10;    // dimensione riserva beni di prima necessità
+    static int illTicks = 10;
     static int supermarketTicks = 10;
     static int hospitalTicks = 10;
     static int randomWalkTicks = 10;
     static int businessTicks = 10;
     static int parkTicks = 10;
+    static int leisureTicks = 10;
+    static double deathProbability = 0.1;
+    static double illProbability = 0.1;
 
     // status
     int food = maxfood;  // riserva beni di prima necessità
@@ -93,14 +107,27 @@ public class Person extends TaskAgent {
 
         statistics = findStatisticsAgent();
 
-        // aggiornamento risorse
-        addBehaviour(new TickerBehaviour(this, Simulation.tick * deltaResources) {
+        // Supermercato
+        addBehaviour(new TickerBehaviour(this, Simulation.tick * goSupermarketTicks) {
             protected void onTick() {
-                food--;
-                if (food < 0)
-                    food = maxfood;
-                    scheduleTask(new WalkBusinessTask(myAgent,"Supermarket"));
-                    scheduleWalkHome();
+                if (!goingSuperMarket) {
+                    food--;
+                    if (food < 0) {
+                        goingSuperMarket = true;
+                        SequentialBehaviour task = new SequentialBehaviour();
+                        task.addSubBehaviour(new WalkBusinessTask(myAgent, "SuperMarket"));
+                        task.addSubBehaviour(new WaitingTask(myAgent, Simulation.tick * staySupermarketTicks));
+                        task.addSubBehaviour(new OneShotBehaviour() {
+                            @Override
+                            public void action() {
+                                food = maxfood;
+                                goingSuperMarket = false;
+                            }
+                        });
+                        task.addSubBehaviour(new WalkingTask(myAgent, home));
+                        scheduleTask(task);
+                    }
+                }
             }
         });
 
@@ -111,15 +138,28 @@ public class Person extends TaskAgent {
                scheduleRandomWalk();
             }
         });
+        */
 
-        addBehaviour(new TickerBehaviour(this, Simulation.tick * hospitalTicks) {
+        addBehaviour(new TickerBehaviour(this, Simulation.tick * goHospitalTicks) {
             protected void onTick() {
-                if(IllProbability()) {
-                     goToHospital();
+                if(!ill && randomIllness()) {
+                    ill = true;
+                    SequentialBehaviour task = new SequentialBehaviour();
+                    task.addSubBehaviour(new WalkBusinessTask(myAgent,"Hospital"));
+                    task.addSubBehaviour(new WaitingTask(myAgent, Simulation.tick * stayHospitalTicks));
+                    task.addSubBehaviour(new OneShotBehaviour() {
+                        @Override
+                        public void action() {
+                            ill = false;
+                        }
+                    });
+                    task.addSubBehaviour(new WalkingTask(myAgent,home));
+                    scheduleTask(task);
                 }
             }
         });
 
+        /*
         addBehaviour(new TickerBehaviour(this, Simulation.tick * businessTicks) {
             protected void onTick() {
                 goToBusiness();
@@ -208,29 +248,22 @@ public class Person extends TaskAgent {
         if (Simulation.debug)
             System.out.println(getLocalName() + " has recovered");
 
-        updateStatistics("Recovered"); //Manda messaggio all'agente Statistics
-        /*
-        if(DeathProbability()){
-            sendStatsDeclaration("Death"); //Manda messaggio ad Agente Statista
+        if (randomDeath()) {
+            updateStatistics("Dead"); //Manda messaggio all'agente Statistics
             this.doDelete();
-        }else{
-            sendStatsDeclaration("Recovered"); //Manda messaggio ad Agente Statista
+        } else {
+            updateStatistics("Recovered"); //Manda messaggio all'agente Statistics
         }
-        */
-    }
-/*
-    boolean DeathProbability() {
-        return ThreadLocalRandom.current().nextFloat()<0.1;
     }
 
-    boolean IllProbability() {
-        return ThreadLocalRandom.current().nextFloat()<0.1;
+    boolean randomDeath() {
+        return (new RandomDeath(deathProbability)).getRandomDeath();
     }
 
-    boolean isRecovered() {
-        return diseaseStatus == SEIR.RECOVERED;
+    boolean randomIllness() {
+        return (new RandomIllness(illProbability)).getRandomIllness();
     }
-*/
+
     // ------------------------------------
     //  Spostamenti
     // ------------------------------------
@@ -351,7 +384,7 @@ public class Person extends TaskAgent {
     /**
      * Task per raggiungere una destinazione passando per le strade intermedie.
      */
-    class WalkingTask extends SequentialBehaviour implements Task {
+    class WalkingTask extends SequentialBehaviour {
 
         public WalkingTask(Agent a, Building destination) {
             super(a);
@@ -384,7 +417,7 @@ public class Person extends TaskAgent {
     /**
      * Task per attendere un certo numero di ticks.
      */
-    class WaitingTask extends DelayBehaviour implements Task {
+    class WaitingTask extends DelayBehaviour {
 
         boolean wait = true;
         int ticks;
@@ -397,7 +430,7 @@ public class Person extends TaskAgent {
         protected void onWake() {}
     }
 
-    class WalkBusinessTask extends SequentialBehaviour implements Task {
+    class WalkBusinessTask extends SequentialBehaviour {
 
         public WalkBusinessTask(Agent a, String category) {
             super(a);
@@ -414,9 +447,6 @@ public class Person extends TaskAgent {
         }
     }
 
-    public void scheduleWalkHome() {
-        scheduleTask(new WalkingTask(this,home));
-    }
     /*
     public void scheduleRandomWalk() {
         int randomNum = ThreadLocalRandom.current().nextInt(1, 5);

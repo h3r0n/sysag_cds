@@ -8,7 +8,7 @@ import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 
-public abstract class Business extends Agent {
+public class Business extends Agent {
     /*enum Business{
         Negozio,
         Supermercato,

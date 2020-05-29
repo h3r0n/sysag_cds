@@ -15,7 +15,7 @@ abstract public class TaskAgent extends Agent {
      *
      * @param t Task da aggiungere alla coda
      */
-    public void scheduleTask(Task t) {
+    public void scheduleTask(Behaviour t) {
         if (todo == null) {
             todo = new SequentialBehaviour();
             this.addBehaviour(todo);
@@ -24,14 +24,6 @@ abstract public class TaskAgent extends Agent {
             todo = new SequentialBehaviour();
             this.addBehaviour(todo);
         }
-        todo.addSubBehaviour((Behaviour) t);
-    }
-
-    /**
-     * Behaviour da eseguire in sequenza.
-     */
-    public interface Task {
-        void action();
-        boolean done();
+        todo.addSubBehaviour(t);
     }
 }
