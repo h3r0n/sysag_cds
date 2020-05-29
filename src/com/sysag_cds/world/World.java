@@ -16,9 +16,9 @@ import java.util.List;
 public class World {
 
     private Graph<Building, Road> map;
-    List<Building> buildingList = new LinkedList<>();
+    private List<Building> buildingList = new LinkedList<>();
     private static World instance = null;
-    DijkstraShortestPath<Building,Road> pathFinder;
+    private DijkstraShortestPath<Building,Road> pathFinder;
 
     private World(int mapSize) {
         buildMap(mapSize);
@@ -58,18 +58,8 @@ public class World {
         return buildingList;
     }
 
-    public String getPath(Building begin, Building end) {
-        List<Road> list = pathFinder.getPath(begin, end);
-        Iterator<Road> iterator = list.iterator();
-        StringBuilder path = new StringBuilder();
-
-        if (iterator.hasNext())
-            path.append(iterator.next());
-        while (iterator.hasNext()) {
-            path.append(",");
-            path.append(iterator.next().toString());
-        }
-        return path.toString();
+    public List<Road> getPath(Building begin, Building end) {
+        return pathFinder.getPath(begin, end);
     }
 
     public int getDistance(Building begin, Building end) {

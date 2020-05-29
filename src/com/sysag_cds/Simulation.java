@@ -9,35 +9,41 @@ import com.sysag_cds.people.PersonFactory;
 import com.sysag_cds.people.RandomSEIR;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
+import jade.domain.DFService;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPAException;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import jade.wrapper.AgentController;
+import jade.wrapper.ContainerController;
+import jade.wrapper.StaleProxyException;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Simulation extends Agent {
     public static int tick = 1000;
-    public static int decreeTick = 10;
+    private static int decreeTick = 10;
     public static boolean debug = true;
-    public static int buildingInform = 20;
-    public static int statsInform = 21;
-    public static int decreeInform = 22;
-    public int deathCounts = 0;
-    public int recoveredCounts = 0;
-    public int infectedCounts = 0;
+    // public static int buildingInform = 20;
+    // public static int statsInform = 21;
+    // public static int decreeInform = 22;
 
-    protected int nPeople;
-    protected double[] diseaseDistribution = new double[4];
-    protected int mapSize;     // la mappa è un quadrato, mapSize è il numero di Building per lato
-    protected double naughtyProb;
 
-    World map;
+    private int nPeople;
+    private double[] diseaseDistribution = new double[4];
+    private int mapSize;     // la mappa è un quadrato, mapSize è il numero di Building per lato
+    private double naughtyProb;
+    private World map;
 
-    List<Building> buildings;
-    List<AID> people = new ArrayList<>();
+    private List<Building> buildings;
+    private List<AID> people = new ArrayList<>();
 
     protected void setup() {
 
-        //registerGrimReaperService();
-        //addBehaviour(new manageStatsCounts());
+        startStatistics();
 
         readArgs(getArguments());
         map = World.getInstance(mapSize);
@@ -65,7 +71,7 @@ public class Simulation extends Agent {
             Crea poi una mappa con 4 edifici
 
      */
-    void readArgs(Object[] args) {
+    private void readArgs(Object[] args) {
         nPeople = Integer.parseInt((String) args[0]);
         diseaseDistribution[Person.SEIR.SUSCEPTIBLE.ordinal()] = Double.parseDouble((String) args[1]);
         diseaseDistribution[Person.SEIR.EXPOSED.ordinal()] = Double.parseDouble((String) args[2]);
@@ -75,7 +81,7 @@ public class Simulation extends Agent {
         mapSize = Integer.parseInt((String) args[5]);
     }
 
-    void createPeople() {
+    private void createPeople() {
 
         PersonFactory pf = new PersonFactory(
                 this,
@@ -88,52 +94,16 @@ public class Simulation extends Agent {
             pf.create();
     }
 
-
-    /*
-
-    void registerGrimReaperService() {
-        DFAgentDescription dfd = new DFAgentDescription();
-        dfd.setName(getAID());
-        ServiceDescription sd = new ServiceDescription();
-        sd.setType("GrimReaper");
-        sd.setName(getLocalName());
-        //sd.addProperties(new Property("Location", position.toString()));
-        //sd.addProperties(new Property("DPI", 0.5));
-        dfd.addServices(sd);
-
+    private void startStatistics() {
+        ContainerController c = getContainerController();
         try {
-            DFService.register(this, dfd);
-        } catch (FIPAException fe) {
-            fe.printStackTrace();
+            AgentController a = c.createNewAgent("Statistics", "com.sysag_cds.Statistics", null);
+            a.start();
+        } catch (StaleProxyException e) {
+            e.printStackTrace();
         }
     }
-
-    class manageStatsCounts extends CyclicBehaviour {
-        @Override
-        public void action() {
-            MessageTemplate MT1=MessageTemplate.MatchPerformative(statsInform);
-            ACLMessage msg = myAgent.receive(MT1);
-
-            if (msg != null) {
-                System.out.println("E' arrivato un messaggio per il Tristo Mietitore");
-                String query = msg.getContent();
-                switch (query){
-                    case "Death":
-                        deathCounts++;
-                        break;
-                    case "Infected":
-                        infectedCounts++;
-                        break;
-                    case "Recovered":
-                        recoveredCounts++;
-                        break;
-                }
-                System.out.println("Sono deceduti "+deathCounts+" agenti nella simulazione, "+(nPeople-deathCounts)+" agenti rimanenti, di cui "+infectedCounts+ " infetti, "+recoveredCounts+" guariti e "+(nPeople-deathCounts-recoveredCounts-infectedCounts)+" esposti.");
-            } else
-                block();
-        }
-    }
-
+/*
     class Decree extends Behaviour{
 
         @Override

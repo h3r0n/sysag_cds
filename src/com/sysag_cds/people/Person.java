@@ -6,7 +6,9 @@ import com.sysag_cds.scheduling.DelayBehaviour;
 import com.sysag_cds.scheduling.TaskAgent;
 import com.sysag_cds.world.Building;
 import com.sysag_cds.world.Location;
+import com.sysag_cds.world.Road;
 import com.sysag_cds.world.World;
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.OneShotBehaviour;
@@ -56,6 +58,9 @@ public class Person extends TaskAgent {
     Location position = home;  // posizione corrente
     List<SubscriptionInitiator> subscriptions = new LinkedList<>(); // lista sottoscrizioni (potenziali contagi)
 
+    // messaggi
+    AID statistics;    // agente fornitore del servizio Statistics
+
     @Override
     protected void setup() {
 
@@ -88,6 +93,8 @@ public class Person extends TaskAgent {
                 naughty = true;
             }
         }
+
+        statistics = findStatisticsAgent();
 
         /*
 
@@ -139,18 +146,18 @@ public class Person extends TaskAgent {
     //  Modello SEIR
     // ------------------------------------
 
-    void setSusceptible() {
+    public void setSusceptible() {
         diseaseStatus = SEIR.SUSCEPTIBLE;
 
         if (Simulation.debug)
             System.out.println(getLocalName() + " is susceptible");
     }
 
-    boolean isSusceptible() {
+    public boolean isSusceptible() {
         return diseaseStatus == SEIR.SUSCEPTIBLE;
     }
 
-    void setExposed() {
+    public void setExposed() {
 
         if (diseaseStatus == SEIR.SUSCEPTIBLE) {
 
@@ -169,13 +176,13 @@ public class Person extends TaskAgent {
         }
     }
 
-    boolean isExposed() {
+    public boolean isExposed() {
         return diseaseStatus == SEIR.EXPOSED;
     }
 
-    void setInfectious() {
+    public void setInfectious() {
         diseaseStatus = SEIR.INFECTIOUS;
-        //sendStatsDeclaration("Infected"); //Manda messaggio ad Agente Statista
+        updateStatistics("Infected");  //Manda messaggio all'agente Statistics
         registerContagionService();
 
         if (Simulation.debug)
@@ -189,11 +196,11 @@ public class Person extends TaskAgent {
         });
     }
 
-    boolean isInfectious() {
+    public boolean isInfectious() {
         return diseaseStatus == SEIR.INFECTIOUS;
     }
 
-    void setRecovered() {
+    public void setRecovered() {
 
         if (diseaseStatus == SEIR.INFECTIOUS)
             deregisterContagionService();
@@ -203,6 +210,7 @@ public class Person extends TaskAgent {
         if (Simulation.debug)
             System.out.println(getLocalName() + " has recovered");
 
+        updateStatistics("Recovered"); //Manda messaggio all'agente Statistics
         /*
         if(DeathProbability()){
             sendStatsDeclaration("Death"); //Manda messaggio ad Agente Statista
@@ -229,7 +237,7 @@ public class Person extends TaskAgent {
     //  Spostamenti
     // ------------------------------------
 
-    void setLocation(Location l) {
+    public void setLocation(Location l) {
 
         System.out.println("L'agente " + getLocalName() + " si sposta in " + l.toString());
 
@@ -245,44 +253,39 @@ public class Person extends TaskAgent {
             subscribeContagionService();
     }
 
+    protected DFAgentDescription createContagionService() {
+        DFAgentDescription dfd = new DFAgentDescription();
+        dfd.setName(getAID());
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("Contagion");
+        sd.setName(getLocalName());
+        sd.addProperties(new Property("Location", position.toString()));
+        //sd.addProperties(new Property("DPI", 0.5));   // todo DPI
+        dfd.addServices(sd);
+
+        return dfd;
+    }
+
     /**
-     * Crea un servizio contagion relativo a una location
+     * Registra un servizio contagion relativo a una location
      */
-    void registerContagionService() {
-        DFAgentDescription dfd = new DFAgentDescription();
-        dfd.setName(getAID());
-        ServiceDescription sd = new ServiceDescription();
-        sd.setType("Contagion");
-        sd.setName(getLocalName());
-        sd.addProperties(new Property("Location", position.toString()));
-        //sd.addProperties(new Property("DPI", 0.5));
-        dfd.addServices(sd);
-
+    public void registerContagionService() {
         try {
-            DFService.register(this, dfd);
+            DFService.register(this, createContagionService());
         } catch (FIPAException fe) {
             fe.printStackTrace();
         }
     }
 
-    void updateContagionService() {
-        DFAgentDescription dfd = new DFAgentDescription();
-        dfd.setName(getAID());
-        ServiceDescription sd = new ServiceDescription();
-        sd.setType("Contagion");
-        sd.setName(getLocalName());
-        sd.addProperties(new Property("Location", position.toString()));
-        //sd.addProperties(new Property("DPI", 0.5));
-        dfd.addServices(sd);
-
+    public void updateContagionService() {
         try {
-            DFService.modify(this, getDefaultDF(), dfd);
+            DFService.modify(this, createContagionService());
         } catch (FIPAException fe) {
             fe.printStackTrace();
         }
     }
 
-    void deregisterContagionService() {
+    public void deregisterContagionService() {
         try {
             DFService.deregister(this);
         } catch (FIPAException e) {
@@ -293,7 +296,7 @@ public class Person extends TaskAgent {
     /**
      * Notifica se esistono possibilità di contagio nel luogo corrente
      */
-    void subscribeContagionService() {
+    public void subscribeContagionService() {
         DFAgentDescription template = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
         sd.setType("Contagion");
@@ -332,7 +335,7 @@ public class Person extends TaskAgent {
 
     }
 
-    void unsubscribeAll() {
+    public void unsubscribeAll() {
         if (Simulation.debug)
             System.out.println(getLocalName() + " unsubscribed");
 
@@ -359,14 +362,13 @@ public class Person extends TaskAgent {
                 @Override
                 public void action() {
                     // in questo modo il calcolo del percorso verrà effettuato quando schedulato
-                    String path = World.getInstance().getPath((Building) position, destination);
-                    String[] roads = path.split(",");
+                    List<Road> path = World.getInstance().getPath((Building) position, destination);
 
-                    for (String r : roads) {
+                    for (Road r : path) {
                         addSubBehaviour(new DelayBehaviour(myAgent, Simulation.tick * walkingTime) {
                             @Override
                             protected void onWake() {
-                                setLocation(new Location(r));
+                                setLocation(r);
                             }
                         });
                     }
@@ -448,7 +450,7 @@ public class Person extends TaskAgent {
      * @param category categoria del Business
      * @return indirizzo del Business più vicino. null se non esiste
      */
-    Building findNearestBusiness(String category) {
+    protected Building findNearestBusiness(String category) {
 
         List<Building> results = new LinkedList<>();
         Building closest = null;
@@ -502,14 +504,40 @@ public class Person extends TaskAgent {
         return closest;
     }
 
-    /*
+    // ------------------------------------
+    //  Statistiche
+    // ------------------------------------
 
-    void sendStatsDeclaration(String s){
-        ACLMessage msg = new ACLMessage(statsInform);
-        msg.addReceiver(pathFinding);
+    protected AID findStatisticsAgent() {
+        DFAgentDescription dfd = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("PathFinding");
+        dfd.addServices(sd);
+
+        DFAgentDescription[] result = new DFAgentDescription[0];
+        try {
+            result = DFService.search(this, dfd);
+        } catch (FIPAException e) {
+            e.printStackTrace();
+        }
+        if(result.length>0) {
+            return result[0].getName();
+        } else
+            return null;
+    }
+
+    protected void updateStatistics(String s) {
+        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+        msg.addReceiver(statistics);
         msg.setContent(s);
         send(msg);
     }
+
+    /*
+
+    // ------------------------------------
+    //  Decreti
+    // ------------------------------------
 
     class manageDecreeDisposition extends CyclicBehaviour {
         @Override
@@ -524,6 +552,5 @@ public class Person extends TaskAgent {
                 block();
         }
     }
-
      */
 }
