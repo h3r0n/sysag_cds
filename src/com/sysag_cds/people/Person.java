@@ -10,10 +10,7 @@ import com.sysag_cds.world.Road;
 import com.sysag_cds.world.World;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
-import jade.core.behaviours.OneShotBehaviour;
-import jade.core.behaviours.SequentialBehaviour;
-import jade.core.behaviours.WakerBehaviour;
+import jade.core.behaviours.*;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.Property;
@@ -96,17 +93,18 @@ public class Person extends TaskAgent {
 
         statistics = findStatisticsAgent();
 
-        /*
-
         // aggiornamento risorse
         addBehaviour(new TickerBehaviour(this, Simulation.tick * deltaResources) {
             protected void onTick() {
                 food--;
                 if (food < 0)
-                    goToSupermarket();
+                    food = maxfood;
+                    scheduleTask(new WalkBusinessTask(myAgent,"Supermarket"));
+                    scheduleWalkHome();
             }
         });
 
+        /*
         addBehaviour(new TickerBehaviour(this, Simulation.tick * randomWalkTicks) {
             protected void onTick() {
                System.out.println("Sto aggiungendo un nuovo percorso per l'agente :" + this.myAgent.getLocalName());

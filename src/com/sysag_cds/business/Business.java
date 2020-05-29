@@ -62,5 +62,7 @@ public abstract class Business extends Agent {
         return dfd;
     }
 
-    abstract String category();
+    protected String category() {
+        return "Business";
+    }
 }
