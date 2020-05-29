@@ -1,4 +1,4 @@
-package com.sysag_cds.map;
+package com.sysag_cds.world;
 
 import com.sysag_cds.Simulation;
 import edu.uci.ics.jung.algorithms.generators.Lattice2DGenerator;
@@ -10,14 +10,20 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * Classe, la cui unica instanza (singleton) rappresenta la mappa geografica in cui si svolge la simulazione
+ */
 public class World {
 
     private Graph<Building, Road> map;
     List<Building> buildingList = new LinkedList<>();
     private static World instance = null;
+    DijkstraShortestPath<Building,Road> pathFinder;
 
     private World(int mapSize) {
         buildMap(mapSize);
+        pathFinder = new DijkstraShortestPath<>(map);
+        pathFinder.enableCaching(true);
     }
 
     public static World getInstance(int mapSize) {
@@ -52,8 +58,8 @@ public class World {
         return buildingList;
     }
 
-    public String getPath(String begin, String end) {
-        List<Road> list = (new DijkstraShortestPath<>(map)).getPath(new Building(begin), new Building(end));
+    public String getPath(Building begin, Building end) {
+        List<Road> list = pathFinder.getPath(begin, end);
         Iterator<Road> iterator = list.iterator();
         StringBuilder path = new StringBuilder();
 
@@ -64,5 +70,9 @@ public class World {
             path.append(iterator.next().toString());
         }
         return path.toString();
+    }
+
+    public int getDistance(Building begin, Building end) {
+        return pathFinder.getDistance(begin, end).intValue();
     }
 }

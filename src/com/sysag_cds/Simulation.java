@@ -1,8 +1,8 @@
 package com.sysag_cds;
 
-import com.sysag_cds.map.Building;
-import com.sysag_cds.map.RandomBuilding;
-import com.sysag_cds.map.World;
+import com.sysag_cds.world.Building;
+import com.sysag_cds.world.RandomBuilding;
+import com.sysag_cds.world.World;
 import com.sysag_cds.people.RandomNaughty;
 import com.sysag_cds.people.Person;
 import com.sysag_cds.people.PersonFactory;

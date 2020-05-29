@@ -1,6 +1,6 @@
 package com.sysag_cds.people;
 
-import com.sysag_cds.map.RandomBuilding;
+import com.sysag_cds.world.RandomBuilding;
 import jade.core.Agent;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
@@ -25,8 +25,8 @@ public class PersonFactory {
     }
 
     public void create() {
-        personArgs[0] = naughtyProb.getRandomNaughty();    // assegna uno stato di salute casuale
-        personArgs[1] = buildingProb.getRandomBuilding();   // assegna una casa casuale
+        personArgs[0] = seirProb.getRandomStatus();    // assegna uno stato di salute casuale
+        personArgs[1] = buildingProb.getRandomBuilding().toString();   // assegna una casa casuale
         personArgs[2] = naughtyProb.getRandomNaughty();     // assegna una coscienziosità casuale
 
         try {

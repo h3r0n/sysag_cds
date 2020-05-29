@@ -4,9 +4,9 @@ import com.google.common.collect.Iterators;
 import com.sysag_cds.Simulation;
 import com.sysag_cds.scheduling.DelayBehaviour;
 import com.sysag_cds.scheduling.TaskAgent;
-import com.sysag_cds.map.Building;
-import com.sysag_cds.map.Location;
-import com.sysag_cds.map.World;
+import com.sysag_cds.world.Building;
+import com.sysag_cds.world.Location;
+import com.sysag_cds.world.World;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
@@ -51,7 +51,7 @@ public class Person extends TaskAgent {
     boolean naughty = false; // mancato rispetto dei decreti
     protected SEIR diseaseStatus = SEIR.SUSCEPTIBLE;    // stato di avanzamento della malattia
     float DPI = 0; //valore di DPI impostato inizialmente a zero
-    Location home = new Building("testHome");      // residenza
+    Building home = new Building("testHome");      // residenza
     Location position = home;  // posizione corrente
     List<SubscriptionInitiator> subscriptions = new LinkedList<>(); // lista sottoscrizioni (potenziali contagi)
 
@@ -79,7 +79,7 @@ public class Person extends TaskAgent {
             }
             // il secondo argomento specifica la casa
             if (args.length >= 2) {
-                home = new Location((String) args[1]);
+                home = new Building((String) args[1]);
                 position = home;
             }
             // il terzo argomento specifica il rispetto dei decreti
@@ -244,7 +244,9 @@ public class Person extends TaskAgent {
             subscribeContagionService();
     }
 
-    // crea un servizio contagion relativo a una location
+    /**
+     * Crea un servizio contagion relativo a una location
+     */
     void registerContagionService() {
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
@@ -287,7 +289,9 @@ public class Person extends TaskAgent {
         }
     }
 
-    // notifica se esistono possibilità di contagio nel luogo corrente
+    /**
+     * Notifica se esistono possibilità di contagio nel luogo corrente
+     */
     void subscribeContagionService() {
         DFAgentDescription template = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
@@ -295,7 +299,8 @@ public class Person extends TaskAgent {
         sd.addProperties(new Property("Location", position.toString()));
         template.addServices(sd);
 
-        SubscriptionInitiator subscription = new SubscriptionInitiator(this, DFService.createSubscriptionMessage(this, getDefaultDF(), template, null)) {
+        SubscriptionInitiator subscription = new SubscriptionInitiator(
+                this, DFService.createSubscriptionMessage(this, getDefaultDF(), template, null)) {
             protected void handleInform(ACLMessage inform) {
                 try {
                     DFAgentDescription[] dfds = DFService.decodeNotification(inform.getContent());
@@ -311,7 +316,7 @@ public class Person extends TaskAgent {
                                 System.out.println("Location: " + ((Property) sd.getAllProperties().next()).getValue());
                                 System.out.println("Received by: " + getLocalName());
                             }
-                            //chiamare la funzione di calcolo del contagio
+                            //todo funzione di calcolo del contagio
                             setExposed();
                         }
                     }
@@ -341,15 +346,18 @@ public class Person extends TaskAgent {
     //  Task
     // ------------------------------------
 
-    class WalkingTask extends SequentialBehaviour {
+    /**
+     * Task per raggiungere una destinazione passando per le strade intermedie.
+     */
+    class WalkingTask extends SequentialBehaviour implements Task {
 
-        public WalkingTask(Agent a, String destination) {
+        public WalkingTask(Agent a, Building destination) {
             super(a);
 
             addSubBehaviour(new OneShotBehaviour() {
                 @Override
                 public void action() {
-                    String path = World.getInstance().getPath(position.toString(), destination);
+                    String path = World.getInstance().getPath((Building) position, destination);
                     String[] roads = path.split(",");
 
                     for (String r : roads) {
@@ -363,7 +371,7 @@ public class Person extends TaskAgent {
                     addSubBehaviour(new DelayBehaviour(myAgent, Simulation.tick * walkingTime) {
                         @Override
                         protected void onWake() {
-                            setLocation(new Location(destination));
+                            setLocation(destination);
                         }
                     });
                 }
@@ -371,7 +379,10 @@ public class Person extends TaskAgent {
         }
     }
 
-    class WaitingTask extends DelayBehaviour {
+    /**
+     * Task per attendere un certo numero di ticks.
+     */
+    class WaitingTask extends DelayBehaviour implements Task {
 
         boolean wait = true;
         int ticks;
@@ -385,7 +396,7 @@ public class Person extends TaskAgent {
     }
 
     public void scheduleWalkHome() {
-        scheduleTask(new WalkingTask(this,home.toString()));
+        scheduleTask(new WalkingTask(this,home));
     }
     /*
     public void scheduleRandomWalk() {
@@ -443,6 +454,70 @@ public class Person extends TaskAgent {
         //da definire
         return position;
     }
+
+    */
+
+    /**
+     * Trova l'indirizzo del Business più vicino di un categoria desiderata.
+     *
+     * @param category categoria del Business
+     * @return indirizzo del Business più vicino. null se non esiste
+     */
+    Location findNearestBusiness(String category) {
+
+        List<Building> results = new LinkedList<>();
+        Building closest = null;
+        int minDist;
+        World map = World.getInstance();
+
+        // search template
+        DFAgentDescription dfdt = new DFAgentDescription();
+        ServiceDescription sdt = new ServiceDescription();
+        sdt.setType(category);
+        if (!naughty)
+            sdt.addProperties(new Property("Open","True"));
+        dfdt.addServices(sdt);
+
+        // search
+        DFAgentDescription[] dfds = new DFAgentDescription[0];
+        try {
+            dfds = DFService.search(this, dfdt);
+        } catch (FIPAException e) {
+            e.printStackTrace();
+        }
+
+        // get results
+        for (DFAgentDescription dfd : dfds) {
+            Iterator allServices = dfd.getAllServices();
+            while (allServices.hasNext()) {
+                ServiceDescription sd = (ServiceDescription) allServices.next();
+                Iterator allProperties = sd.getAllProperties();
+                while (allProperties.hasNext()) {
+                    Property p = (Property) allProperties.next();
+                    if (p.getName().equals("Location"))
+                        results.add(new Building((String) p.getValue()));
+                }
+            }
+        }
+
+        // pick the closest
+        if (results.size()>0) {
+            closest = results.get(0);
+            minDist = map.getDistance((Building) position, closest);
+
+            for (Building b : results) {
+                int dist = map.getDistance((Building) position, b);
+                if (dist < minDist) {
+                    closest = b;
+                    minDist = dist;
+                }
+            }
+        }
+
+        return closest;
+    }
+
+    /*
 
     void goToSupermarket(){
         Location supermarket = new Location("test");

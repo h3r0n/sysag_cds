@@ -1,6 +1,6 @@
 package com.sysag_cds.business;
 
-import com.sysag_cds.map.Location;
+import com.sysag_cds.world.Location;
 import jade.core.Agent;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -34,7 +34,7 @@ public abstract class Business extends Agent {
         sd.setType(category());
         sd.setName(getLocalName());
         sd.addProperties(new Property("Location", position.toString()));
-        sd.addProperties(new Property("Density", String.valueOf(density)));
+        sd.addProperties(new Property("Density", density));
         sd.addProperties(new Property("Open","True"));
         dfd.addServices(sd);
 

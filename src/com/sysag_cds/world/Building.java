@@ -1,4 +1,4 @@
-package com.sysag_cds.map;
+package com.sysag_cds.world;
 
 public class Building extends Location {
 

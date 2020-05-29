@@ -5,17 +5,17 @@ import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.SequentialBehaviour;
 
 /**
- * Agente con una coda di Behaviour sempre attiva
+ * Agente con una coda di Task sempre attiva
  */
 abstract public class TaskAgent extends Agent {
     SequentialBehaviour todo = null;
 
     /**
-     * Aggiunge un Behaviour alla coda
+     * Aggiunge un Task alla coda
      *
-     * @param t Behaviour da aggiungere alla coda
+     * @param t Task da aggiungere alla coda
      */
-    public void scheduleTask(Behaviour t) {
+    public void scheduleTask(Task t) {
         if (todo == null) {
             todo = new SequentialBehaviour();
             this.addBehaviour(todo);
@@ -24,6 +24,11 @@ abstract public class TaskAgent extends Agent {
             todo = new SequentialBehaviour();
             this.addBehaviour(todo);
         }
-        todo.addSubBehaviour(t);
+        todo.addSubBehaviour((Behaviour) t);
+    }
+
+    public interface Task {
+        public void action();
+        public boolean done();
     }
 }

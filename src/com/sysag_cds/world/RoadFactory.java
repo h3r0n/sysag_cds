@@ -1,4 +1,4 @@
-package com.sysag_cds.map;
+package com.sysag_cds.world;
 
 import com.google.common.base.Supplier;
 

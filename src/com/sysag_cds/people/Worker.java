@@ -1,12 +1,13 @@
 package com.sysag_cds.people;
 
 import com.sysag_cds.Simulation;
-import com.sysag_cds.map.Location;
+import com.sysag_cds.world.Building;
+import com.sysag_cds.world.Location;
 import jade.core.behaviours.TickerBehaviour;
 
 public class Worker extends Person {
 
-    Location workingPlace;
+    Building workingPlace;
     int workTicks=10;
     int workInterval=100;
 
@@ -21,9 +22,9 @@ public class Worker extends Person {
     }
 
     void work(){
-        scheduleTask(new WalkingTask(this,workingPlace.toString()));
+        scheduleTask(new WalkingTask(this,workingPlace));
         scheduleTask(new WaitingTask(this,Simulation.tick*workTicks));
-        scheduleTask(new WalkingTask(this,home.toString()));
+        scheduleTask(new WalkingTask(this,home));
     }
 
 }

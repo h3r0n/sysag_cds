@@ -1,4 +1,4 @@
-package com.sysag_cds.map;
+package com.sysag_cds.world;
 
 import java.util.Objects;
 
