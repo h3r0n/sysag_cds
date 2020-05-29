@@ -27,8 +27,11 @@ abstract public class TaskAgent extends Agent {
         todo.addSubBehaviour((Behaviour) t);
     }
 
+    /**
+     * Behaviour da eseguire in sequenza.
+     */
     public interface Task {
-        public void action();
-        public boolean done();
+        void action();
+        boolean done();
     }
 }

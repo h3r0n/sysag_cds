@@ -22,12 +22,32 @@ public abstract class Business extends Agent {
     double density;
     boolean open;
 
-
     protected void setup() {
         registerService();
     }
 
+    public void setOpen(boolean open) {
+        this.open = open;
+        updateService();
+    }
+
     private void registerService() {
+        try {
+            DFService.register(this, createService());
+        } catch (FIPAException fe) {
+            fe.printStackTrace();
+        }
+    }
+
+    public void updateService() {
+        try {
+            DFService.modify(this, createService());
+        } catch (FIPAException fe) {
+            fe.printStackTrace();
+        }
+    }
+
+    private DFAgentDescription createService() {
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
@@ -35,14 +55,11 @@ public abstract class Business extends Agent {
         sd.setName(getLocalName());
         sd.addProperties(new Property("Location", position.toString()));
         sd.addProperties(new Property("Density", density));
-        sd.addProperties(new Property("Open","True"));
+        if (open)
+            sd.addProperties(new Property("Open","True"));
         dfd.addServices(sd);
 
-        try {
-            DFService.register(this, dfd);
-        } catch (FIPAException fe) {
-            fe.printStackTrace();
-        }
+        return dfd;
     }
 
     abstract String category();
