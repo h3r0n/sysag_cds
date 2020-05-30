@@ -15,7 +15,7 @@ public class BusinessFactory {
     ContainerController c;
     Object[] businessArgs = new Object[3];
 
-    BusinessFactory(Agent creator, RandomBuilding bp, RandomBusiness cp) {
+    public BusinessFactory(Agent creator, RandomBuilding bp, RandomBusiness cp) {
         c = creator.getContainerController();
         this.bp = bp;
         this.cp = cp;
