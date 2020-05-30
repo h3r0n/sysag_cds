@@ -105,18 +105,19 @@ public class Person extends TaskAgent {
                 food--;
                 if (!goingSuperMarket && food < 0) {
                     goingSuperMarket = true;
-                    SequentialBehaviour task = new SequentialBehaviour();
-                    task.addSubBehaviour(new WalkBusinessTask(myAgent, "SuperMarket"));
-                    task.addSubBehaviour(new WaitingTask(myAgent, Simulation.tick * staySupermarketTicks));
-                    task.addSubBehaviour(new OneShotBehaviour() {
-                        @Override
-                        public void action() {
-                            food = maxfood;
-                            goingSuperMarket = false;
-                        }
-                    });
-                    task.addSubBehaviour(new WalkingTask(myAgent, home));
-                    scheduleTask(task);
+                    Building destination = findNearestBusiness("SuperMarket");
+                    if (destination!=null) {
+                        scheduleTask(new WalkingTask(myAgent, destination));
+                        scheduleTask(new WaitingTask(myAgent, Simulation.tick * staySupermarketTicks));
+                        scheduleTask(new OneShotBehaviour() {
+                            @Override
+                            public void action() {
+                                food = maxfood;
+                                goingSuperMarket = false;
+                            }
+                        });
+                        scheduleTask(new WalkingTask(myAgent, home));
+                    }
                 }
             }
         });
@@ -134,17 +135,18 @@ public class Person extends TaskAgent {
             protected void onTick() {
                 if(!ill && randomIllness()) {
                     ill = true;
-                    SequentialBehaviour task = new SequentialBehaviour();
-                    task.addSubBehaviour(new WalkBusinessTask(myAgent,"Hospital"));
-                    task.addSubBehaviour(new WaitingTask(myAgent, Simulation.tick * stayHospitalTicks));
-                    task.addSubBehaviour(new OneShotBehaviour() {
-                        @Override
-                        public void action() {
-                            ill = false;
-                        }
-                    });
-                    task.addSubBehaviour(new WalkingTask(myAgent,home));
-                    scheduleTask(task);
+                    Building destination = findNearestBusiness("Hospital");
+                    if (destination!=null) {
+                        scheduleTask(new WalkingTask(myAgent, destination));
+                        scheduleTask(new WaitingTask(myAgent, Simulation.tick * stayHospitalTicks));
+                        scheduleTask(new OneShotBehaviour() {
+                            @Override
+                            public void action() {
+                                ill = false;
+                            }
+                        });
+                        scheduleTask(new WalkingTask(myAgent, home));
+                    }
                 }
             }
         });
