@@ -3,19 +3,11 @@ package com.sysag_cds;
 import com.sysag_cds.world.Building;
 import com.sysag_cds.world.RandomBuilding;
 import com.sysag_cds.world.World;
-import com.sysag_cds.people.RandomNaughty;
 import com.sysag_cds.people.Person;
 import com.sysag_cds.people.PersonFactory;
 import com.sysag_cds.people.RandomSEIR;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.CyclicBehaviour;
-import jade.domain.DFService;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
-import jade.domain.FIPAException;
-import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
@@ -85,9 +77,9 @@ public class Simulation extends Agent {
 
         PersonFactory pf = new PersonFactory(
                 this,
-                new RandomBuilding(map),
+                new RandomBuilding(),
                 new RandomSEIR(diseaseDistribution[0], diseaseDistribution[1], diseaseDistribution[2], diseaseDistribution[3]),
-                new RandomNaughty(naughtyProb)
+                naughtyProb
         );
 
         for (int i = 0; i < nPeople; i++)

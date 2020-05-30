@@ -1,4 +1,4 @@
-package com.sysag_cds.scheduling;
+package com.sysag_cds.utility;
 
 import jade.core.Agent;
 import jade.core.behaviours.SimpleBehaviour;

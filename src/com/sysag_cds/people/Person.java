@@ -1,9 +1,10 @@
 package com.sysag_cds.people;
 
 import com.google.common.collect.Iterators;
+import com.sysag_cds.utility.BooleanProbability;
 import com.sysag_cds.Simulation;
-import com.sysag_cds.scheduling.DelayBehaviour;
-import com.sysag_cds.scheduling.TaskAgent;
+import com.sysag_cds.utility.DelayBehaviour;
+import com.sysag_cds.utility.TaskAgent;
 import com.sysag_cds.world.Building;
 import com.sysag_cds.world.Location;
 import com.sysag_cds.world.Road;
@@ -22,7 +23,6 @@ import jade.util.leap.Iterator;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 
 public class Person extends TaskAgent {
 
@@ -37,21 +37,12 @@ public class Person extends TaskAgent {
     static int seirDelta = 2;   // tempo di incubazione (da EXPOSED a INFECTIOUS)
     static int seirGamma = 100;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
     static int walkingTime = 1; // tempo per percorrere una strada
-
-    static int goSupermarketTicks = 10;
-    static int staySupermarketTicks = 10;
-    boolean goingSuperMarket = false;
-
-    static int goHospitalTicks = 10;
-    static int stayHospitalTicks = 10;
-
-
-    static int resourcesTicks = 10;   // tempo di aggiornamento risorse
     static int maxfood = 10;    // dimensione riserva beni di prima necessità
-    static int illTicks = 10;
-    static int supermarketTicks = 10;
-    static int hospitalTicks = 10;
-    static int randomWalkTicks = 10;
+    static int deltaFoodTicks = 10; // tempo di riduzione beni di prima necessità
+    static int staySupermarketTicks = 10; // tempo di permanenza al supermercato
+    static int deltaIllTicks = 10; // tempo di insorgenza di malattia
+    static int stayHospitalTicks = 10; // tempo di degenza in ospedale
+    static int randomWalkTicks = 10;    // tempo tra passeggiate
     static int businessTicks = 10;
     static int parkTicks = 10;
     static int leisureTicks = 10;
@@ -60,9 +51,10 @@ public class Person extends TaskAgent {
 
     // status
     int food = maxfood;  // riserva beni di prima necessità
-    boolean dead = false;
+    boolean goingSuperMarket = false;
     boolean ill = false;
     boolean naughty = false; // mancato rispetto dei decreti
+    static int randomWalkDistance = 2; // distanza massima passeggiata
     protected SEIR diseaseStatus = SEIR.SUSCEPTIBLE;    // stato di avanzamento della malattia
     float DPI = 0; //valore di DPI impostato inizialmente a zero
     Building home = new Building("testHome");      // residenza
@@ -107,40 +99,38 @@ public class Person extends TaskAgent {
 
         statistics = findStatisticsAgent();
 
-        // Supermercato
-        addBehaviour(new TickerBehaviour(this, Simulation.tick * goSupermarketTicks) {
+        // supermercato
+        addBehaviour(new TickerBehaviour(this, Simulation.tick * deltaFoodTicks) {
             protected void onTick() {
-                if (!goingSuperMarket) {
-                    food--;
-                    if (food < 0) {
-                        goingSuperMarket = true;
-                        SequentialBehaviour task = new SequentialBehaviour();
-                        task.addSubBehaviour(new WalkBusinessTask(myAgent, "SuperMarket"));
-                        task.addSubBehaviour(new WaitingTask(myAgent, Simulation.tick * staySupermarketTicks));
-                        task.addSubBehaviour(new OneShotBehaviour() {
-                            @Override
-                            public void action() {
-                                food = maxfood;
-                                goingSuperMarket = false;
-                            }
-                        });
-                        task.addSubBehaviour(new WalkingTask(myAgent, home));
-                        scheduleTask(task);
-                    }
+                food--;
+                if (!goingSuperMarket && food < 0) {
+                    goingSuperMarket = true;
+                    SequentialBehaviour task = new SequentialBehaviour();
+                    task.addSubBehaviour(new WalkBusinessTask(myAgent, "SuperMarket"));
+                    task.addSubBehaviour(new WaitingTask(myAgent, Simulation.tick * staySupermarketTicks));
+                    task.addSubBehaviour(new OneShotBehaviour() {
+                        @Override
+                        public void action() {
+                            food = maxfood;
+                            goingSuperMarket = false;
+                        }
+                    });
+                    task.addSubBehaviour(new WalkingTask(myAgent, home));
+                    scheduleTask(task);
                 }
             }
         });
 
-        /*
+        // passeggiata
         addBehaviour(new TickerBehaviour(this, Simulation.tick * randomWalkTicks) {
             protected void onTick() {
                System.out.println("Sto aggiungendo un nuovo percorso per l'agente :" + this.myAgent.getLocalName());
-               scheduleRandomWalk();
+               scheduleTask(new RandomWalkTask(myAgent,randomWalkDistance));
             }
         });
-        */
 
-        addBehaviour(new TickerBehaviour(this, Simulation.tick * goHospitalTicks) {
+        // ospedale
+        addBehaviour(new TickerBehaviour(this, Simulation.tick * deltaIllTicks) {
             protected void onTick() {
                 if(!ill && randomIllness()) {
                     ill = true;
@@ -173,7 +163,6 @@ public class Person extends TaskAgent {
         });
 
         addBehaviour(new manageDecreeDisposition());
-
          */
 
         if (Simulation.debug)
@@ -256,12 +245,16 @@ public class Person extends TaskAgent {
         }
     }
 
+    public boolean isRecovered() {
+        return diseaseStatus == SEIR.RECOVERED;
+    }
+
     boolean randomDeath() {
-        return (new RandomDeath(deathProbability)).getRandomDeath();
+        return BooleanProbability.getBoolean(deathProbability);
     }
 
     boolean randomIllness() {
-        return (new RandomIllness(illProbability)).getRandomIllness();
+        return BooleanProbability.getBoolean(illProbability);
     }
 
     // ------------------------------------
@@ -392,23 +385,25 @@ public class Person extends TaskAgent {
             addSubBehaviour(new OneShotBehaviour() {
                 @Override
                 public void action() {
-                    // in questo modo il calcolo del percorso verrà effettuato quando schedulato
+                    // in questo modo il calcolo del percorso verrà effettuato all'attivazione
                     List<Road> path = World.getInstance().getPath((Building) position, destination);
 
-                    for (Road r : path) {
+                    if (path!=null) {
+                        for (Road r : path) {
+                            addSubBehaviour(new DelayBehaviour(myAgent, Simulation.tick * walkingTime) {
+                                @Override
+                                protected void onWake() {
+                                    setLocation(r);
+                                }
+                            });
+                        }
                         addSubBehaviour(new DelayBehaviour(myAgent, Simulation.tick * walkingTime) {
                             @Override
                             protected void onWake() {
-                                setLocation(r);
+                                setLocation(destination);
                             }
                         });
                     }
-                    addSubBehaviour(new DelayBehaviour(myAgent, Simulation.tick * walkingTime) {
-                        @Override
-                        protected void onWake() {
-                            setLocation(destination);
-                        }
-                    });
                 }
             });
         }
@@ -438,7 +433,7 @@ public class Person extends TaskAgent {
             addSubBehaviour(new OneShotBehaviour() {
                 @Override
                 public void action() {
-                    // in questo modo la ricerca della destinazione verrà effettuata quando schedulato
+                    // in questo modo la ricerca della destinazione verrà effettuata all'attivazione
                     Building destination = findNearestBusiness(category);
                     if (destination != null)
                         addSubBehaviour(new WalkingTask(myAgent,destination));
@@ -447,30 +442,40 @@ public class Person extends TaskAgent {
         }
     }
 
-    /*
-    public void scheduleRandomWalk() {
-        int randomNum = ThreadLocalRandom.current().nextInt(1, 5);
-        System.out.println(randomNum);
-        switch (randomNum){
-            case 1:
-                scheduleTask(new WalkingTask("b0"));
-                break;
-            case 2:
-                scheduleTask(new WalkingTask("b1"));
-                break;
-            case 3:
-                scheduleTask(new WalkingTask("b2"));
-                break;
-            case 4:
-                scheduleTask(new WalkingTask("b3"));
-                break;
-            default:
-                scheduleTask(new WalkingTask(home.toString()));
-                break;
+    /**
+     * Task per effettuare una passeggiata.
+     */
+    class RandomWalkTask extends SequentialBehaviour {
+        public RandomWalkTask(Agent a, int maxDistance) {
+            super(a);
+
+            addSubBehaviour(new OneShotBehaviour() {
+                @Override
+                public void action() {
+                    // in questo modo il calcolo del percorso verrà effettuato all'attivazione
+                    Building start = (Building) position;
+                    List<Road> path = World.getInstance().getRandomWalk(start, maxDistance);
+
+                    if (path!=null) {
+                        for (Road r : path) {
+                            addSubBehaviour(new DelayBehaviour(myAgent, Simulation.tick * walkingTime) {
+                                @Override
+                                protected void onWake() {
+                                    setLocation(r);
+                                }
+                            });
+                        }
+                        addSubBehaviour(new DelayBehaviour(myAgent, Simulation.tick * walkingTime) {
+                            @Override
+                            protected void onWake() {
+                                setLocation(start);
+                            }
+                        });
+                    }
+                }
+            });
         }
     }
-
-    */
 
     /**
      * Trova l'indirizzo del Business più vicino di un categoria desiderata.
