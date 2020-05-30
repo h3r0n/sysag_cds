@@ -1,8 +1,6 @@
-package com.sysag_cds.business;
+package com.sysag_cds.world;
 
 import com.sysag_cds.utility.Decree;
-import com.sysag_cds.world.Building;
-import com.sysag_cds.world.Location;
 import jade.core.Agent;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -14,14 +12,6 @@ import jade.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
 
 public class Business extends Agent {
-    /*enum Business{
-        Negozio,
-        Supermercato,
-        Scuola,
-        Fabbrica,
-        Parco,
-        Ospedale
-    }*/
 
     Building position;
     boolean open;
@@ -37,7 +27,7 @@ public class Business extends Agent {
 
             // il secondo argomento specifica la posizione
             if (args.length >= 2) {
-                position = new Building((String) args[1]);
+                position = World.getInstance().findBuilding(new Building((String) args[1]));
             }
             // il terzo argomento specifica la densità
             if (args.length >= 3) {

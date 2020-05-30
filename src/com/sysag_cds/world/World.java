@@ -107,4 +107,10 @@ public class World {
 
         return stream.collect(Collectors.toList());
     }
+
+    public Building findBuilding(Building b) {
+        return buildingList.stream()
+                .filter(building -> building.equals(b))
+                .findAny().orElse(null);
+    }
 }
