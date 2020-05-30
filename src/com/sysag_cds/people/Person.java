@@ -57,7 +57,6 @@ public class Person extends TaskAgent {
     boolean naughty = false; // mancato rispetto dei decreti
     static int walkingDistance = 2; // distanza massima passeggiata
     protected SEIR diseaseStatus = SEIR.SUSCEPTIBLE;    // stato di avanzamento della malattia
-    float DPI = 0; //valore di DPI impostato inizialmente a zero
     Building home = new Building("testHome");      // residenza
     Location position = home;  // posizione corrente
     List<SubscriptionInitiator> subscriptions = new LinkedList<>(); // lista sottoscrizioni (potenziali contagi)
@@ -155,19 +154,19 @@ public class Person extends TaskAgent {
         });
 
         /*
+        // todo
         addBehaviour(new TickerBehaviour(this, Simulation.tick * businessTicks) {
             protected void onTick() {
                 goToBusiness();
             }
         });
 
+        // todo
         addBehaviour(new TickerBehaviour(this, Simulation.tick * parkTicks) {
             protected void onTick() {
                 goToPark();
             }
         });
-
-        addBehaviour(new manageDecreeDisposition());
          */
 
         if (Simulation.debug)
@@ -282,19 +281,6 @@ public class Person extends TaskAgent {
             subscribeContagionService();
     }
 
-    protected DFAgentDescription createContagionService() {
-        DFAgentDescription dfd = new DFAgentDescription();
-        dfd.setName(getAID());
-        ServiceDescription sd = new ServiceDescription();
-        sd.setType("Contagion");
-        sd.setName(getLocalName());
-        sd.addProperties(new Property("Location", position));
-        //sd.addProperties(new Property("DPI", 0.5));   // todo DPI
-        dfd.addServices(sd);
-
-        return dfd;
-    }
-
     /**
      * Registra un servizio contagion relativo a una location
      */
@@ -322,6 +308,20 @@ public class Person extends TaskAgent {
         }
     }
 
+    protected DFAgentDescription createContagionService() {
+        DFAgentDescription dfd = new DFAgentDescription();
+        dfd.setName(getAID());
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("Contagion");
+        sd.setName(getLocalName());
+        sd.addProperties(new Property("Location", position));   // location
+        sd.addProperties(new Property("DPI", haveDPI()));   // boolean
+        sd.addProperties(new Property("Distancing", distancing())); // double
+        dfd.addServices(sd);
+
+        return dfd;
+    }
+
     /**
      * Notifica se esistono possibilità di contagio nel luogo corrente
      */
@@ -340,17 +340,21 @@ public class Person extends TaskAgent {
                     for (DFAgentDescription dfd : dfds) {
                         Iterator allServices = dfd.getAllServices();
                         while (allServices.hasNext()) {
+                            boolean infectiousDPI = true;
+                            double infectiousDist = 0;
+
                             ServiceDescription sd = (ServiceDescription) allServices.next();
-                            if (Simulation.debug) {
-                                System.out.println("dfd name: " + dfd.getName());
-                                System.out.println("services: " + Iterators.size(allServices));
-                                System.out.println("sd type: " + sd.getType());
-                                System.out.println("sd name:" + sd.getName());
-                                //System.out.println("Location: " + ((Property) sd.getAllProperties().next()).getValue());
-                                System.out.println("Received by: " + getLocalName());
+                            Iterator allProperties = sd.getAllProperties();
+                            while (allProperties.hasNext()) {
+                                Property p = (Property) allProperties.next();
+                                if (p.getName().equals("DPI"))
+                                    infectiousDPI = (boolean) p.getValue();
+                                if (p.getName().equals("Distancing"))
+                                    infectiousDist = (double) p.getValue();
                             }
-                            //todo funzione di calcolo del contagio
-                            setExposed();
+
+                            if (meet(infectiousDist, distancing()) && contagion(infectiousDPI, haveDPI()))
+                                setExposed();
                         }
                     }
                 } catch (FIPAException fe) {
@@ -556,12 +560,46 @@ public class Person extends TaskAgent {
     //  Contagio
     // ------------------------------------
 
-    Double distancing() {
-        return 1.0;
+    // True se due persone si avvicinano
+    static boolean meet(Double infectiousDist, Double susceptibleDist) {
+        return BooleanProbability.getBoolean(Math.max(infectiousDist,susceptibleDist));
     }
 
-    Boolean contagion() {
-        return true;
+    // True se avviene il contagio
+    static boolean contagion(boolean infectiousDPI, boolean susceptibleDPI) {
+        double probability = 1;
+
+        if (!infectiousDPI && susceptibleDPI)
+            probability = .7;
+
+        if (infectiousDPI && !susceptibleDPI)
+            probability = .05;
+
+        if (infectiousDPI && susceptibleDPI)
+            probability = .015;
+
+        return BooleanProbability.getBoolean(probability);
+    }
+
+    // Probabilità di avvicinarsi a qualcuno
+    double distancing() {
+        Double minDist = position.getDensity();
+        Double maxDist = naughty ? 1 : currentDecree.getDensity();
+        return minDist + Math.random() * (maxDist-minDist);
+    }
+
+    // Possesso DPI come mascherine e guanti
+    boolean haveDPI() {
+        boolean have = false;
+        boolean indoor = position instanceof Building;
+
+        if (!naughty && currentDecree.getMaskRequired()==Decree.LAW.ALWAYS && !position.equals(home))
+            have = true;
+
+        if (!naughty && currentDecree.getMaskRequired()==Decree.LAW.INDOOR && indoor && !position.equals(home))
+            have = true;
+
+        return have;
     }
 
     // ------------------------------------
