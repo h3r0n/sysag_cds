@@ -4,9 +4,18 @@ import java.util.Objects;
 
 public class Location {
     protected String location;
+    protected Double density = .0;
 
     public Location(String l) {
         location = l;
+    }
+
+    public Double getDensity() {
+        return density;
+    }
+
+    public void setDensity(Double d) {
+        density=d;
     }
 
     @Override

@@ -1,6 +1,6 @@
 package com.sysag_cds.world;
 
-import com.sysag_cds.Simulation;
+import com.sysag_cds.superagents.Simulation;
 import edu.uci.ics.jung.algorithms.filters.KNeighborhoodFilter;
 import edu.uci.ics.jung.algorithms.generators.Lattice2DGenerator;
 import edu.uci.ics.jung.algorithms.shortestpath.DijkstraShortestPath;

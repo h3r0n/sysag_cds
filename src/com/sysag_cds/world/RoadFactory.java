@@ -8,6 +8,8 @@ public class RoadFactory implements Supplier<Road> {
 
     @Override
     public Road get() {
-        return new Road("r"+counter++);
+        Road r = new Road("r"+counter++);
+        r.density = .1;
+        return r;
     }
 }

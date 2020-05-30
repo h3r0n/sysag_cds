@@ -1,4 +1,4 @@
-package com.sysag_cds;
+package com.sysag_cds.superagents;
 
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;

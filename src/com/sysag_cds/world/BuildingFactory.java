@@ -17,6 +17,7 @@ public class BuildingFactory implements Supplier<Building> {
     @Override
     public Building get() {
         Building b = new Building("b"+count++);
+        b.density = .5;
         if (list!=null)
             list.add(b);
         return b;

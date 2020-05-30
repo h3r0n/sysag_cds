@@ -1,8 +1,7 @@
 package com.sysag_cds.people;
 
-import com.sysag_cds.Simulation;
+import com.sysag_cds.superagents.Simulation;
 import com.sysag_cds.world.Building;
-import com.sysag_cds.world.Location;
 import jade.core.behaviours.TickerBehaviour;
 
 public class Worker extends Person {
@@ -22,9 +21,9 @@ public class Worker extends Person {
     }
 
     void work(){
-        scheduleTask(new WalkingTask(this,workingPlace));
+        scheduleTask(new TravelTask(this,workingPlace));
         scheduleTask(new WaitingTask(this,Simulation.tick*workTicks));
-        scheduleTask(new WalkingTask(this,home));
+        scheduleTask(new TravelTask(this,home));
     }
 
 }

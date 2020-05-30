@@ -2,7 +2,8 @@ package com.sysag_cds.people;
 
 import com.google.common.collect.Iterators;
 import com.sysag_cds.utility.BooleanProbability;
-import com.sysag_cds.Simulation;
+import com.sysag_cds.superagents.Simulation;
+import com.sysag_cds.utility.Decree;
 import com.sysag_cds.utility.DelayBehaviour;
 import com.sysag_cds.utility.TaskAgent;
 import com.sysag_cds.world.Building;
@@ -42,7 +43,7 @@ public class Person extends TaskAgent {
     static int staySupermarketTicks = 10; // tempo di permanenza al supermercato
     static int deltaIllTicks = 10; // tempo di insorgenza di malattia
     static int stayHospitalTicks = 10; // tempo di degenza in ospedale
-    static int randomWalkTicks = 10;    // tempo tra passeggiate
+    static int walkingTicks = 10;    // tempo tra passeggiate
     static int businessTicks = 10;
     static int parkTicks = 10;
     static int leisureTicks = 10;
@@ -54,7 +55,7 @@ public class Person extends TaskAgent {
     boolean goingSuperMarket = false;
     boolean ill = false;
     boolean naughty = false; // mancato rispetto dei decreti
-    static int randomWalkDistance = 2; // distanza massima passeggiata
+    static int walkingDistance = 2; // distanza massima passeggiata
     protected SEIR diseaseStatus = SEIR.SUSCEPTIBLE;    // stato di avanzamento della malattia
     float DPI = 0; //valore di DPI impostato inizialmente a zero
     Building home = new Building("testHome");      // residenza
@@ -63,6 +64,7 @@ public class Person extends TaskAgent {
 
     // messaggi
     AID statistics;    // agente fornitore del servizio Statistics
+    Decree currentDecree = new Decree();
 
     @Override
     protected void setup() {
@@ -97,7 +99,8 @@ public class Person extends TaskAgent {
             }
         }
 
-        statistics = findStatisticsAgent();
+        statistics = findServiceAgent("Statistics");
+        subscribeDecrees();
 
         // supermercato
         addBehaviour(new TickerBehaviour(this, Simulation.tick * deltaFoodTicks) {
@@ -107,7 +110,7 @@ public class Person extends TaskAgent {
                     goingSuperMarket = true;
                     Building destination = findNearestBusiness("SuperMarket");
                     if (destination!=null) {
-                        scheduleTask(new WalkingTask(myAgent, destination));
+                        scheduleTask(new TravelTask(myAgent, destination));
                         scheduleTask(new WaitingTask(myAgent, Simulation.tick * staySupermarketTicks));
                         scheduleTask(new OneShotBehaviour() {
                             @Override
@@ -116,17 +119,17 @@ public class Person extends TaskAgent {
                                 goingSuperMarket = false;
                             }
                         });
-                        scheduleTask(new WalkingTask(myAgent, home));
+                        scheduleTask(new TravelTask(myAgent, home));
                     }
                 }
             }
         });
 
         // passeggiata
-        addBehaviour(new TickerBehaviour(this, Simulation.tick * randomWalkTicks) {
+        addBehaviour(new TickerBehaviour(this, Simulation.tick * walkingTicks) {
             protected void onTick() {
                System.out.println("Sto aggiungendo un nuovo percorso per l'agente :" + this.myAgent.getLocalName());
-               scheduleTask(new RandomWalkTask(myAgent,randomWalkDistance));
+               scheduleTask(new WalkingTask(myAgent, walkingDistance));
             }
         });
 
@@ -137,7 +140,7 @@ public class Person extends TaskAgent {
                     ill = true;
                     Building destination = findNearestBusiness("Hospital");
                     if (destination!=null) {
-                        scheduleTask(new WalkingTask(myAgent, destination));
+                        scheduleTask(new TravelTask(myAgent, destination));
                         scheduleTask(new WaitingTask(myAgent, Simulation.tick * stayHospitalTicks));
                         scheduleTask(new OneShotBehaviour() {
                             @Override
@@ -145,7 +148,7 @@ public class Person extends TaskAgent {
                                 ill = false;
                             }
                         });
-                        scheduleTask(new WalkingTask(myAgent, home));
+                        scheduleTask(new TravelTask(myAgent, home));
                     }
                 }
             }
@@ -285,7 +288,7 @@ public class Person extends TaskAgent {
         ServiceDescription sd = new ServiceDescription();
         sd.setType("Contagion");
         sd.setName(getLocalName());
-        sd.addProperties(new Property("Location", position.toString()));
+        sd.addProperties(new Property("Location", position));
         //sd.addProperties(new Property("DPI", 0.5));   // todo DPI
         dfd.addServices(sd);
 
@@ -326,7 +329,7 @@ public class Person extends TaskAgent {
         DFAgentDescription template = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
         sd.setType("Contagion");
-        sd.addProperties(new Property("Location", position.toString()));
+        sd.addProperties(new Property("Location", position));
         template.addServices(sd);
 
         SubscriptionInitiator subscription = new SubscriptionInitiator(
@@ -343,7 +346,7 @@ public class Person extends TaskAgent {
                                 System.out.println("services: " + Iterators.size(allServices));
                                 System.out.println("sd type: " + sd.getType());
                                 System.out.println("sd name:" + sd.getName());
-                                System.out.println("Location: " + ((Property) sd.getAllProperties().next()).getValue());
+                                //System.out.println("Location: " + ((Property) sd.getAllProperties().next()).getValue());
                                 System.out.println("Received by: " + getLocalName());
                             }
                             //todo funzione di calcolo del contagio
@@ -358,7 +361,6 @@ public class Person extends TaskAgent {
 
         addBehaviour(subscription);
         subscriptions.add(subscription);
-
     }
 
     public void unsubscribeAll() {
@@ -379,9 +381,9 @@ public class Person extends TaskAgent {
     /**
      * Task per raggiungere una destinazione passando per le strade intermedie.
      */
-    class WalkingTask extends SequentialBehaviour {
+    class TravelTask extends SequentialBehaviour {
 
-        public WalkingTask(Agent a, Building destination) {
+        public TravelTask(Agent a, Building destination) {
             super(a);
 
             addSubBehaviour(new OneShotBehaviour() {
@@ -427,28 +429,11 @@ public class Person extends TaskAgent {
         protected void onWake() {}
     }
 
-    class WalkBusinessTask extends SequentialBehaviour {
-
-        public WalkBusinessTask(Agent a, String category) {
-            super(a);
-
-            addSubBehaviour(new OneShotBehaviour() {
-                @Override
-                public void action() {
-                    // in questo modo la ricerca della destinazione verrà effettuata all'attivazione
-                    Building destination = findNearestBusiness(category);
-                    if (destination != null)
-                        addSubBehaviour(new WalkingTask(myAgent,destination));
-                }
-            });
-        }
-    }
-
     /**
      * Task per effettuare una passeggiata.
      */
-    class RandomWalkTask extends SequentialBehaviour {
-        public RandomWalkTask(Agent a, int maxDistance) {
+    class WalkingTask extends SequentialBehaviour {
+        public WalkingTask(Agent a, int maxDistance) {
             super(a);
 
             addSubBehaviour(new OneShotBehaviour() {
@@ -517,7 +502,7 @@ public class Person extends TaskAgent {
                 while (allProperties.hasNext()) {
                     Property p = (Property) allProperties.next();
                     if (p.getName().equals("Location"))
-                        results.add(new Building((String) p.getValue()));
+                        results.add((Building) p.getValue());
                 }
             }
         }
@@ -535,7 +520,6 @@ public class Person extends TaskAgent {
                 }
             }
         }
-
         return closest;
     }
 
@@ -543,10 +527,10 @@ public class Person extends TaskAgent {
     //  Statistiche
     // ------------------------------------
 
-    protected AID findStatisticsAgent() {
+    protected AID findServiceAgent(String type) {
         DFAgentDescription dfd = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
-        sd.setType("PathFinding");
+        sd.setType(type);
         dfd.addServices(sd);
 
         DFAgentDescription[] result = new DFAgentDescription[0];
@@ -568,24 +552,53 @@ public class Person extends TaskAgent {
         send(msg);
     }
 
-    /*
+    // ------------------------------------
+    //  Contagio
+    // ------------------------------------
+
+    Double distancing() {
+        return 1.0;
+    }
+
+    Boolean contagion() {
+        return true;
+    }
 
     // ------------------------------------
     //  Decreti
     // ------------------------------------
 
-    class manageDecreeDisposition extends CyclicBehaviour {
-        @Override
-        public void action() {
-            MessageTemplate MT1=MessageTemplate.MatchPerformative(decreeInform);
-            ACLMessage msg = myAgent.receive(MT1);
-
-            if (msg != null) {
-                String query = msg.getContent();
-                DPI= Float.parseFloat(query);
-            } else
-                block();
-        }
-    }
+    /**
+     * Notifica aggiornamenti alle normative
      */
+    public void subscribeDecrees() {
+        DFAgentDescription template = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("Government");
+        template.addServices(sd);
+
+        SubscriptionInitiator subscription = new SubscriptionInitiator(
+                this, DFService.createSubscriptionMessage(this, getDefaultDF(), template, null)) {
+            protected void handleInform(ACLMessage inform) {
+                try {
+                    DFAgentDescription[] dfds = DFService.decodeNotification(inform.getContent());
+                    for (DFAgentDescription dfd : dfds) {
+                        Iterator allServices = dfd.getAllServices();
+                        while (allServices.hasNext()) {
+                            ServiceDescription sd = (ServiceDescription) allServices.next();
+                            Iterator allProperties = sd.getAllProperties();
+                            while (allProperties.hasNext()) {
+                                Property p = (Property) allProperties.next();
+                                if (p.getName().equals("Decree"))
+                                    currentDecree = (Decree) p.getValue();
+                            }
+                        }
+                    }
+                } catch (FIPAException fe) {
+                    fe.printStackTrace();
+                }
+            }
+        };
+        addBehaviour(subscription);
+    }
 }
