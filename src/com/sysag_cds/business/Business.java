@@ -1,5 +1,6 @@
 package com.sysag_cds.business;
 
+import com.sysag_cds.world.Building;
 import com.sysag_cds.world.Location;
 import jade.core.Agent;
 import jade.domain.DFService;
@@ -18,11 +19,29 @@ public class Business extends Agent {
         Ospedale
     }*/
 
-    Location position;
+    Building position;
     double density;
     boolean open;
+    String category;
 
     protected void setup() {
+        // inizializzazione agente
+        Object[] args = this.getArguments();
+        if (args != null) {
+            // il primo argomento specifica la categoria
+            System.out.println((String) args[0]);
+            category = (String) args[0];
+
+            // il secondo argomento specifica la posizione
+            if (args.length >= 2) {
+                position = new Building((String) args[1]);
+            }
+            // il terzo argomento specifica la densità
+            if (args.length >= 3) {
+                density = Double.parseDouble((String)args[2]);
+            }
+        }
+
         registerService();
     }
 
@@ -51,7 +70,7 @@ public class Business extends Agent {
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
-        sd.setType(category());
+        sd.setType(category);
         sd.setName(getLocalName());
         sd.addProperties(new Property("Location", position.toString()));
         sd.addProperties(new Property("Density", density));
@@ -60,9 +79,5 @@ public class Business extends Agent {
         dfd.addServices(sd);
 
         return dfd;
-    }
-
-    protected String category() {
-        return "Business";
     }
 }
