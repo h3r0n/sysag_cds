@@ -34,7 +34,6 @@ public class Business extends Agent {
                 position.setDensity(Double.parseDouble((String)args[2]));
             }
         }
-
         registerService();
         subscribeDecrees();
     }

@@ -89,7 +89,8 @@ public class Person extends TaskAgent {
             }
             // il secondo argomento specifica la casa
             if (args.length >= 2) {
-                home = new Building((String) args[1]);
+                home = World.getInstance().findBuilding(new Building((String) args[1]));
+                home.setDensity(1.0);
                 position = home;
             }
             // il terzo argomento specifica il rispetto dei decreti
