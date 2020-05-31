@@ -47,16 +47,17 @@ public class Person extends TaskAgent {
     static int deltaIllTicks = 10; // tempo di insorgenza di malattia
     static int stayHospitalTicks = 10; // tempo di degenza in ospedale
     static int walkingTicks = 10;    // tempo tra passeggiate
-    static int businessTicks = 10;
-    static int parkTicks = 10;
-    static int leisureTicks = 10;
+    static int parkTicks = 100;
+    static int stayParkTicks = 10;
     static double deathProbability = 0.1;
     static double illProbability = 0.1;
 
     // status
     int food = maxfood;  // riserva beni di prima necessità
     boolean goingSuperMarket = false;
+    boolean goingHospital = false;
     boolean ill = false;
+    boolean goingPark = false;
     boolean naughty = false; // mancato rispetto dei decreti
     static int walkingDistance = 2; // distanza massima passeggiata
     protected SEIR diseaseStatus = SEIR.SUSCEPTIBLE;    // stato di avanzamento della malattia
@@ -115,19 +116,21 @@ public class Person extends TaskAgent {
                     task.addSubBehaviour(new OneShotBehaviour() {
                         @Override
                         public void action() {
-                            Building destination = findNearestBusiness("SuperMarket");
-                            if (destination!=null) {
-                                task.addSubBehaviour(new TravelTask(myAgent, destination));
-                                task.addSubBehaviour(new WaitingTask(myAgent, Simulation.tick * staySupermarketTicks));
-                                task.addSubBehaviour(new OneShotBehaviour() {
-                                    @Override
-                                    public void action() {
-                                        food = maxfood;
-                                        goingSuperMarket = false;
-                                    }
-                                });
-                                task.addSubBehaviour(new TravelTask(myAgent, home));
-                            }
+                        Building destination = findNearestBusiness("SuperMarket");
+                        if (destination!=null) {
+                            task.addSubBehaviour(new TravelTask(myAgent, destination));
+                            task.addSubBehaviour(new WaitingTask(myAgent, Simulation.tick * staySupermarketTicks));
+                            task.addSubBehaviour(new OneShotBehaviour() {
+                                @Override
+                                public void action() {
+                                    food = maxfood;
+                                    goingSuperMarket = false;
+                                }
+                            });
+                            task.addSubBehaviour(new TravelTask(myAgent, home));
+                        } else {
+                            goingSuperMarket = false;
+                        }
                         }
                     });
                     scheduleTask(task);
@@ -153,9 +156,10 @@ public class Person extends TaskAgent {
         // ospedale
         addBehaviour(new TickerBehaviour(this, Simulation.tick * deltaIllTicks) {
             protected void onTick() {
-                if(!ill && randomIllness()) {
-                    ill = true;
-
+                if (!ill)
+                    ill = randomIllness();
+                if(ill && !goingHospital) {
+                    goingHospital = true;
                     SequentialBehaviour task = new SequentialBehaviour();
                     task.addSubBehaviour(new OneShotBehaviour() {
                         @Override
@@ -168,9 +172,12 @@ public class Person extends TaskAgent {
                                     @Override
                                     public void action() {
                                         ill = false;
+                                        goingHospital = false;
                                     }
                                 });
                                 task.addSubBehaviour(new TravelTask(myAgent, home));
+                            } else {
+                                goingHospital = false;
                             }
                         }
                     });
@@ -179,14 +186,36 @@ public class Person extends TaskAgent {
             }
         });
 
-        /*
-        // todo
+        // parco
         addBehaviour(new TickerBehaviour(this, Simulation.tick * parkTicks) {
             protected void onTick() {
-                goToPark();
+                food--;
+                if (!goingSuperMarket && food < 0) {
+                    goingSuperMarket = true;
+                    SequentialBehaviour task = new SequentialBehaviour();
+                    task.addSubBehaviour(new OneShotBehaviour() {
+                        @Override
+                        public void action() {
+                        Building destination = findNearestBusiness("Park");
+                        if (destination!=null) {
+                            task.addSubBehaviour(new TravelTask(myAgent, destination));
+                            task.addSubBehaviour(new WaitingTask(myAgent, Simulation.tick * stayParkTicks));
+                            task.addSubBehaviour(new OneShotBehaviour() {
+                                @Override
+                                public void action() {
+                                goingPark = false;
+                                }
+                            });
+                            task.addSubBehaviour(new TravelTask(myAgent, home));
+                        } else {
+                            goingPark = false;
+                        }
+                        }
+                    });
+                    scheduleTask(task);
+                }
             }
         });
-         */
 
         if (Simulation.debug)
             System.out.println("Agent " + getLocalName() + " started");
