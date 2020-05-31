@@ -59,7 +59,7 @@ public class Person extends TaskAgent {
     boolean ill = false;
     boolean goingPark = false;
     boolean naughty = false; // mancato rispetto dei decreti
-    static int walkingDistance = 2; // distanza massima passeggiata
+    static int walkingDistance = 10; // distanza massima passeggiata (naugthy)
     protected SEIR diseaseStatus = SEIR.SUSCEPTIBLE;    // stato di avanzamento della malattia
     Building home = new Building("testHome");      // residenza
     Location position = home;  // posizione corrente
@@ -145,8 +145,10 @@ public class Person extends TaskAgent {
                task.addSubBehaviour(new OneShotBehaviour() {
                    @Override
                    public void action() {
-                       if (currentDecree.getWalkDistance()>0)
+                       if (currentDecree.getWalkDistance()>0 && !naughty)
                            task.addSubBehaviour(new WalkingTask(myAgent, currentDecree.getWalkDistance()));
+                       if (naughty)
+                           task.addSubBehaviour(new WalkingTask(myAgent, walkingDistance));
                    }
                });
                scheduleTask(task);
