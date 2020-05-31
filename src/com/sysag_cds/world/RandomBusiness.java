@@ -5,7 +5,7 @@ import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 import java.util.stream.IntStream;
 
 public class RandomBusiness {
-    private String[] categoryStrings = new String[]{"SuperMarket", "Park", "Business"}; // todo
+    private final String[] categoryStrings = new String[]{"SuperMarket", "Hospital", "Park"};
     EnumeratedIntegerDistribution distribution;
 
     public RandomBusiness(double[] p) {

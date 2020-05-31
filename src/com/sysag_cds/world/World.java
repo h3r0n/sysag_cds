@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 public class World {
 
     private Graph<Building, Road> map;
-    private List<Building> buildingList = new LinkedList<>();
+    private List<Building> buildingList;
     private static World instance = null;
     private DijkstraShortestPath<Building,Road> pathFinder;
 
@@ -41,13 +41,17 @@ public class World {
 
     private void buildMap(int mapSize) {
 
+        BuildingFactory bf = new BuildingFactory();
+
         map = (
                 new Lattice2DGenerator<>(UndirectedSparseGraph.getFactory(),
-                        new BuildingFactory(buildingList),
+                        bf,
                         new RoadFactory(),
                         mapSize, false
                 )
         ).get();
+
+        buildingList = bf.getList();
 
         if (Simulation.debug) {
             System.out.println(map.toString());

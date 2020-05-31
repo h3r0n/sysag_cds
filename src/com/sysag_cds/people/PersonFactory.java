@@ -12,29 +12,51 @@ public class PersonFactory {
     protected int count = 0;
 
     RandomSEIR seirProb;
-    Double naughtyProb;
+    double naughtyProb;
+    double workingProb;
     RandomBuilding buildingProb;
+    RandomBuilding wpProb;
 
     ContainerController c;
     Object[] personArgs = new Object[3];
+    Object[] workerArgs = new Object[4];
 
-    public PersonFactory(Agent creator, RandomBuilding bp, RandomSEIR sp, Double np) {
+    public PersonFactory(Agent creator, RandomBuilding bp, RandomBuilding wpp, RandomSEIR sp, double np, double wp) {
         c = creator.getContainerController();
         buildingProb = bp;
         seirProb = sp;
         naughtyProb = np;
+        workingProb = wp;
+        wpProb = wpp;
     }
 
     public void create() {
-        personArgs[0] = seirProb.getRandomStatus();    // assegna uno stato di salute casuale
-        personArgs[1] = buildingProb.getRandomBuilding().toString();   // assegna una casa casuale
-        personArgs[2] = BooleanProbability.getTrueFalse(naughtyProb);    // assegna una coscienziosità casuale
+        if (BooleanProbability.getBoolean(workingProb)) {
 
-        try {
-            AgentController a = c.createNewAgent("p" + count++, "com.sysag_cds.people.Person", personArgs);
-            a.start();
-        } catch (StaleProxyException e) {
-            e.printStackTrace();
+            workerArgs[0] = seirProb.getRandomStatus();    // assegna uno stato di salute casuale
+            workerArgs[1] = buildingProb.getRandomBuilding().toString();   // assegna una casa casuale
+            workerArgs[2] = BooleanProbability.getTrueFalse(naughtyProb);    // assegna una coscienziosità casuale
+            workerArgs[3] = buildingProb.getRandomBuilding().toString(); // assegna un posto di lavoro casuale
+
+            try {
+                AgentController a = c.createNewAgent("p" + count++, "com.sysag_cds.people.Worker", workerArgs);
+                a.start();
+            } catch (StaleProxyException e) {
+                e.printStackTrace();
+            }
+
+        } else {
+
+            personArgs[0] = seirProb.getRandomStatus();    // assegna uno stato di salute casuale
+            personArgs[1] = buildingProb.getRandomBuilding().toString();   // assegna una casa casuale
+            personArgs[2] = BooleanProbability.getTrueFalse(naughtyProb);    // assegna una coscienziosità casuale
+
+            try {
+                AgentController a = c.createNewAgent("p" + count++, "com.sysag_cds.people.Person", personArgs);
+                a.start();
+            } catch (StaleProxyException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

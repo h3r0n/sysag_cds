@@ -1,3 +1,17 @@
+/*
+    Parametri di Simulation:
+        [0] numero di Person
+        [2-4] probabilità di creare persone SUSCEPTIBLE,EXPOSED,INFECTIOUS,RECOVERED
+        [5] probabilità di creare persone non coscienziose (tra 0 e 1)
+        [6] probabilità di creare lavoratori
+        [7] numero di Building per lato, considerando che la mappa è un quadrato. Deve essere >= 2
+        [8] numero di Business
+
+    Esempio: -agents simulation:com.sysag_cds.superagents.Simulation(1,.5,0,.5,0,0.1,2)
+        Crea 1 agente Person, con il 50% di probabilità di essere SUSCEPTIBLE e il 50% di essere INFECTIOUS
+        Crea poi una mappa con 4 edifici
+ */
+
 package com.sysag_cds.superagents;
 
 import com.sysag_cds.world.BusinessFactory;
@@ -21,32 +35,48 @@ public class Simulation extends Agent {
     private double[] diseaseDistribution = new double[4];
     private int mapSize;
     private double naughtyProb;
+    private double workerProb;
 
-    RandomBuilding randomBuilding = new RandomBuilding();
 
     protected void setup() {
-        startGovernment();
-        startStatistics();
+        startGovernment();  // avvia superagente Government
+        startStatistics();  // avvia superagente Statistics
 
-        readArgs(getArguments());
-        World.getInstance(mapSize);
-        createBusinesses();
-        createPeople();
+        readArgs(getArguments());   // leggi argomenti
+        World.getInstance(mapSize); // inizializza mappa
+        RandomBuilding randomBuilding = new RandomBuilding();   // edifici casuali per case e business
+
+        // crea Business
+        BusinessFactory bf = new BusinessFactory(
+                this,   // agente che crea gli agenti Business
+                randomBuilding, // selezionatore casuale di Building in cui posizionare il business
+                new RandomBusiness(new double[]{.3, .3, .3})    // selezionatore casuale di categorie di business
+        );
+
+        for (int i = 0; i < nBusiness; i++)
+            bf.create();
+
+        RandomBuilding randomWorkplace = new RandomBuilding(bf.getList());   // edifici casuali per posti di lavoro
+
+        // crea Persone
+        PersonFactory pf = new PersonFactory(
+                this,   // agente che crea gli agenti Person
+                randomBuilding, // selezionatore casuale di Building da impostare come casa
+                randomWorkplace,    // selezionatore casuale di Building da impostare come posto di lavoro
+                new RandomSEIR( // selezionatore casuale di stati della malattia
+                        diseaseDistribution[0],
+                        diseaseDistribution[1],
+                        diseaseDistribution[2],
+                        diseaseDistribution[3]
+                ),
+                naughtyProb,    // probabilità di creare incoscienti
+                workerProb  // probabilità di creare lavoratori
+        );
+
+        for (int i = 0; i < nPeople; i++)
+            pf.create();
     }
 
-    /*
-        Parametri di Simulation:
-            [0] numero di Person
-            [2-4] probabilità di creare persone SUSCEPTIBLE,EXPOSED,INFECTIOUS,RECOVERED
-            [5] probabilità di creare persone non coscienziose (tra 0 e 1)
-            [6] numero di Building per lato, considerando che la mappa è un quadrato. Deve essere >= 2
-            [7] numero di Business
-
-        Esempio: -agents simulation:com.sysag_cds.superagents.Simulation(1,.5,0,.5,0,0.1,2)
-            Crea 1 agente Person, con il 50% di probabilità di essere SUSCEPTIBLE e il 50% di essere INFECTIOUS
-            Crea poi una mappa con 4 edifici
-
-     */
     private void readArgs(Object[] args) {
         nPeople = Integer.parseInt((String) args[0]);
         diseaseDistribution[Person.SEIR.SUSCEPTIBLE.ordinal()] = Double.parseDouble((String) args[1]);
@@ -54,37 +84,9 @@ public class Simulation extends Agent {
         diseaseDistribution[Person.SEIR.INFECTIOUS.ordinal()] = Double.parseDouble((String) args[3]);
         diseaseDistribution[Person.SEIR.RECOVERED.ordinal()] = Double.parseDouble((String) args[4]);
         naughtyProb = Double.parseDouble((String) args[5]);
-        mapSize = Integer.parseInt((String) args[6]);
-        nBusiness = Integer.parseInt((String) args[7]);
-    }
-
-    private void createPeople() {
-
-        PersonFactory pf = new PersonFactory(
-                this,
-                randomBuilding,
-                new RandomSEIR(
-                        diseaseDistribution[0],
-                        diseaseDistribution[1],
-                        diseaseDistribution[2],
-                        diseaseDistribution[3]
-                ),
-                naughtyProb
-        );
-
-        for (int i = 0; i < nPeople; i++)
-            pf.create();
-    }
-
-    private void createBusinesses() {
-        BusinessFactory bf = new BusinessFactory(
-                this,
-                randomBuilding,
-                new RandomBusiness(new double[]{.1, .2, .3})    // todo
-        );
-
-        for (int i = 0; i < nBusiness; i++)
-            bf.create();
+        workerProb = Double.parseDouble((String) args[6]);
+        mapSize = Integer.parseInt((String) args[7]);
+        nBusiness = Integer.parseInt((String) args[8]);
     }
 
     private void startStatistics() {

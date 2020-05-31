@@ -177,13 +177,6 @@ public class Person extends TaskAgent {
 
         /*
         // todo
-        addBehaviour(new TickerBehaviour(this, Simulation.tick * businessTicks) {
-            protected void onTick() {
-                goToBusiness();
-            }
-        });
-
-        // todo
         addBehaviour(new TickerBehaviour(this, Simulation.tick * parkTicks) {
             protected void onTick() {
                 goToPark();

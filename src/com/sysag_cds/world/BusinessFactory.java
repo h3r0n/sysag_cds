@@ -5,9 +5,13 @@ import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public class BusinessFactory {
 
     protected int count = 0;
+    List<Building> list = new LinkedList<>();
 
     RandomBuilding bp;
     RandomBusiness cp;
@@ -22,8 +26,11 @@ public class BusinessFactory {
     }
 
     public void create() {
+        Building b = bp.getRandomBuildingAndRemove();
+        list.add(b);
+
         businessArgs[0] = cp.getRandomCategory();
-        businessArgs[1] = bp.getRandomBuildingAndRemove();
+        businessArgs[1] = b.toString();
         businessArgs[2] = Double.toString(0.5 + Math.random() * .5);
 
         try {
@@ -34,5 +41,9 @@ public class BusinessFactory {
         } catch (StaleProxyException e) {
             e.printStackTrace();
         }
+    }
+
+    public List<Building> getList() {
+        return list;
     }
 }
