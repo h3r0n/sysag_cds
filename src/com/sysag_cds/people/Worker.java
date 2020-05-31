@@ -40,12 +40,6 @@ public class Worker extends Person {
 
         addBehaviour(new TickerBehaviour(this, Simulation.tick * workInterval) {
             protected void onTick() {
-                work();
-            }
-        });
-
-        addBehaviour(new TickerBehaviour(this, Simulation.tick * workInterval) {
-            protected void onTick() {
                 if (!working) {
                     working = true;
                     SequentialBehaviour task = new SequentialBehaviour();
@@ -69,12 +63,6 @@ public class Worker extends Person {
                 }
             }
         });
-    }
-
-    void work() {
-        scheduleTask(new TravelTask(this, workplace));
-        scheduleTask(new WaitingTask(this, Simulation.tick * workTicks));
-        scheduleTask(new TravelTask(this, home));
     }
 
     boolean isOpen(Building building) {
