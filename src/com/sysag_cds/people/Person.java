@@ -1,6 +1,5 @@
 package com.sysag_cds.people;
 
-import com.google.common.collect.Iterators;
 import com.sysag_cds.utility.BooleanProbability;
 import com.sysag_cds.superagents.Simulation;
 import com.sysag_cds.utility.Decree;
@@ -108,19 +107,26 @@ public class Person extends TaskAgent {
                 food--;
                 if (!goingSuperMarket && food < 0) {
                     goingSuperMarket = true;
-                    Building destination = findNearestBusiness("SuperMarket");
-                    if (destination!=null) {
-                        scheduleTask(new TravelTask(myAgent, destination));
-                        scheduleTask(new WaitingTask(myAgent, Simulation.tick * staySupermarketTicks));
-                        scheduleTask(new OneShotBehaviour() {
-                            @Override
-                            public void action() {
-                                food = maxfood;
-                                goingSuperMarket = false;
+                    SequentialBehaviour task = new SequentialBehaviour();
+                    task.addSubBehaviour(new OneShotBehaviour() {
+                        @Override
+                        public void action() {
+                            Building destination = findNearestBusiness("SuperMarket");
+                            if (destination!=null) {
+                                task.addSubBehaviour(new TravelTask(myAgent, destination));
+                                task.addSubBehaviour(new WaitingTask(myAgent, Simulation.tick * staySupermarketTicks));
+                                task.addSubBehaviour(new OneShotBehaviour() {
+                                    @Override
+                                    public void action() {
+                                        food = maxfood;
+                                        goingSuperMarket = false;
+                                    }
+                                });
+                                task.addSubBehaviour(new TravelTask(myAgent, home));
                             }
-                        });
-                        scheduleTask(new TravelTask(myAgent, home));
-                    }
+                        }
+                    });
+                    scheduleTask(task);
                 }
             }
         });
@@ -128,8 +134,15 @@ public class Person extends TaskAgent {
         // passeggiata
         addBehaviour(new TickerBehaviour(this, Simulation.tick * walkingTicks) {
             protected void onTick() {
-               System.out.println("Sto aggiungendo un nuovo percorso per l'agente :" + this.myAgent.getLocalName());
-               scheduleTask(new WalkingTask(myAgent, walkingDistance));
+               SequentialBehaviour task = new SequentialBehaviour();
+               task.addSubBehaviour(new OneShotBehaviour() {
+                   @Override
+                   public void action() {
+                       if (currentDecree.getWalkDistance()>0)
+                           task.addSubBehaviour(new WalkingTask(myAgent, currentDecree.getWalkDistance()));
+                   }
+               });
+               scheduleTask(task);
             }
         });
 
@@ -138,18 +151,26 @@ public class Person extends TaskAgent {
             protected void onTick() {
                 if(!ill && randomIllness()) {
                     ill = true;
-                    Building destination = findNearestBusiness("Hospital");
-                    if (destination!=null) {
-                        scheduleTask(new TravelTask(myAgent, destination));
-                        scheduleTask(new WaitingTask(myAgent, Simulation.tick * stayHospitalTicks));
-                        scheduleTask(new OneShotBehaviour() {
-                            @Override
-                            public void action() {
-                                ill = false;
+
+                    SequentialBehaviour task = new SequentialBehaviour();
+                    task.addSubBehaviour(new OneShotBehaviour() {
+                        @Override
+                        public void action() {
+                            Building destination = findNearestBusiness("Hospital");
+                            if (destination!=null) {
+                                task.addSubBehaviour(new TravelTask(myAgent, destination));
+                                task.addSubBehaviour(new WaitingTask(myAgent, Simulation.tick * stayHospitalTicks));
+                                task.addSubBehaviour(new OneShotBehaviour() {
+                                    @Override
+                                    public void action() {
+                                        ill = false;
+                                    }
+                                });
+                                task.addSubBehaviour(new TravelTask(myAgent, home));
                             }
-                        });
-                        scheduleTask(new TravelTask(myAgent, home));
-                    }
+                        }
+                    });
+                    scheduleTask(task);
                 }
             }
         });
@@ -354,7 +375,7 @@ public class Person extends TaskAgent {
                                     infectiousDist = (double) p.getValue();
                             }
 
-                            if (meet(infectiousDist, distancing()) && contagion(infectiousDPI, haveDPI()))
+                            if (meet(infectiousDist) && contagion(infectiousDPI))
                                 setExposed();
                         }
                     }
@@ -562,13 +583,15 @@ public class Person extends TaskAgent {
     // ------------------------------------
 
     // True se due persone si avvicinano
-    static boolean meet(Double infectiousDist, Double susceptibleDist) {
+    boolean meet(double infectiousDist) {
+        double susceptibleDist = distancing();
         return BooleanProbability.getBoolean(Math.max(infectiousDist,susceptibleDist));
     }
 
     // True se avviene il contagio
-    static boolean contagion(boolean infectiousDPI, boolean susceptibleDPI) {
+    boolean contagion(boolean infectiousDPI) {
         double probability = 1;
+        boolean susceptibleDPI = haveDPI();
 
         if (!infectiousDPI && susceptibleDPI)
             probability = .7;
