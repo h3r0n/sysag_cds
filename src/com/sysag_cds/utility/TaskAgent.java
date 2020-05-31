@@ -5,7 +5,7 @@ import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.SequentialBehaviour;
 
 /**
- * Agente con una coda di Task sempre attiva
+ * Agente con una coda di Task sempre attiva.
  */
 abstract public class TaskAgent extends Agent {
     SequentialBehaviour todo = null;

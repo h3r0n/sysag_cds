@@ -2,6 +2,9 @@ package com.sysag_cds.world;
 
 import com.google.common.base.Supplier;
 
+/**
+ * Classe factory che restituisce istanze di classe Road.
+ */
 public class RoadFactory implements Supplier<Road> {
 
     protected int counter = 0;

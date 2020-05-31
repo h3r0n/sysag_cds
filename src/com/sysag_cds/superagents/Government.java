@@ -8,6 +8,10 @@ import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 
+/**
+ * L'agente Government può emanare decreti riguardo il distanziamento sociale, la chiusura di Business
+ * e l'obbligo di indossare DPI.
+ */
 public class Government extends Agent {
 
     Decree currentDecree = new Decree();

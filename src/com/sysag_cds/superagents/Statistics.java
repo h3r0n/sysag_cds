@@ -9,6 +9,9 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 
+/**
+ * L'agente Statistics raccoglie i numeri relativi al contagio e li stampa periodicamente.
+ */
 public class Statistics extends Agent {
 
     private int dead = 0;

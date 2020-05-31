@@ -12,7 +12,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Classe, la cui unica instanza (singleton) rappresenta la mappa geografica in cui si svolge la simulazione
+ * Classe, la cui unica instanza (singleton) rappresenta la mappa geografica in cui si svolge la simulazione.
+ * Offre metodi per il pathfinding.
  */
 public class World {
 

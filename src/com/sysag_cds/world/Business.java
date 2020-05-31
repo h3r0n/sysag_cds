@@ -11,6 +11,10 @@ import jade.lang.acl.ACLMessage;
 import jade.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
 
+/**
+ * Agente Business in cui si recano gli agenti Person per svariati motivi. Gestisce la propria apertura/chiusura
+ * in base ai decreti dell'agente Government.
+ */
 public class Business extends Agent {
 
     Building position;

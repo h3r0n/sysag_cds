@@ -24,6 +24,10 @@ import jade.util.leap.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * L'agente Person simula i comportamenti di una persona che si muove nella mappa per diversi
+ * scopi. È in grado di contrarre la malattia e di contagiare altri agenti Person.
+ */
 public class Person extends TaskAgent {
 
     public enum SEIR {

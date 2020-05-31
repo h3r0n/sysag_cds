@@ -7,6 +7,10 @@ import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
 
+/**
+ * Classe factory che crea agenti di tipo Person nel container corrente, assegnando loro una casa, un posto di lavoro
+ * (se lavoratori), una coscienziosità e uno stadio della malattia (modello SEIR).
+ */
 public class PersonFactory {
 
     protected int count = 0;

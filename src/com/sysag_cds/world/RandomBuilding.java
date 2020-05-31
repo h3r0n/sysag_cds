@@ -5,6 +5,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Estrae un edificio casuale dal singleton World o da una lista di edifici. Supporta l'estrazione può essere con o
+ * senza reimmissione.
+ */
 public class RandomBuilding {
     Random rand;
     List<Building> buildings;

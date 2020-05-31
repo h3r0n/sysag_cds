@@ -5,7 +5,7 @@ import jade.core.behaviours.SimpleBehaviour;
 
 /**
  * Simile a WakerBehaviour, ma il delay parte dal momento in cui il behaviour si attiva, e non nel momento in cui
- * viene creato
+ * viene creato.
  */
 public abstract class DelayBehaviour extends SimpleBehaviour {
     private long timeout, wakeupTime;

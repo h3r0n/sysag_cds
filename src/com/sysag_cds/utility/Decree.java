@@ -1,5 +1,8 @@
 package com.sysag_cds.utility;
 
+/**
+ * Specifica le norme sul distanziamento sociale, la chiusura di Business e l'obbligo di indossare DPI.
+ */
 public class Decree {
 
     public enum LAW {

@@ -2,6 +2,9 @@ package com.sysag_cds.world;
 
 import java.util.Objects;
 
+/**
+ * Un indirizzo generico.
+ */
 public class Location {
     protected String location;
     protected Double density = .0;

@@ -2,6 +2,7 @@ package com.sysag_cds.people;
 
 import com.sysag_cds.superagents.Simulation;
 import com.sysag_cds.utility.BooleanProbability;
+import com.sysag_cds.utility.Decree;
 import com.sysag_cds.world.Building;
 import com.sysag_cds.world.World;
 import jade.core.behaviours.OneShotBehaviour;
@@ -14,6 +15,11 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.util.leap.Iterator;
 
+/**
+ * L'agente Worker è una specializzazione dell'agente Person che in più si sposta periodicamente verso
+ * il proprio posto di lavoro, che gli assicura una più bassa probabilità di contagio, se indicato
+ * dall'agente Government.
+ */
 public class Worker extends Person {
 
     Building workplace = null;
@@ -104,7 +110,11 @@ public class Worker extends Person {
 
     @Override
     boolean contagion(boolean infectiousDPI) {
-        if (position.equals(workplace))
+        if (position.equals(workplace) &&
+                (currentDecree.getMaskRequired()==Decree.LAW.ALWAYS
+                        || currentDecree.getMaskRequired()==Decree.LAW.INDOOR
+                )
+        )
             return BooleanProbability.getBoolean(workContagion);
         else
             return super.contagion(infectiousDPI);

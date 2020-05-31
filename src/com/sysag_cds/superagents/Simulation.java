@@ -1,17 +1,3 @@
-/*
-    Parametri di Simulation:
-        [0] numero di Person
-        [2-4] probabilità di creare persone SUSCEPTIBLE,EXPOSED,INFECTIOUS,RECOVERED
-        [5] probabilità di creare persone non coscienziose (tra 0 e 1)
-        [6] probabilità di creare lavoratori
-        [7] numero di Building per lato, considerando che la mappa è un quadrato. Deve essere >= 2
-        [8] numero di Business
-
-    Esempio: -agents simulation:com.sysag_cds.superagents.Simulation(1,.5,0,.5,0,0.1,2)
-        Crea 1 agente Person, con il 50% di probabilità di essere SUSCEPTIBLE e il 50% di essere INFECTIOUS
-        Crea poi una mappa con 4 edifici
- */
-
 package com.sysag_cds.superagents;
 
 import com.sysag_cds.world.BusinessFactory;
@@ -26,6 +12,21 @@ import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
 
+/**
+ * L'agente Simulation crea gli altri agenti e avvia la simulazione.
+ *
+ * Parametri di Simulation:
+ *     [0] numero di Person
+ *     [2-4] probabilità di creare persone SUSCEPTIBLE,EXPOSED,INFECTIOUS,RECOVERED
+ *     [5] probabilità di creare persone non coscienziose (tra 0 e 1)
+ *     [6] probabilità di creare lavoratori
+ *     [7] numero di Building per lato, considerando che la mappa è un quadrato. Deve essere >= 2
+ *     [8] numero di Business
+ *
+ * Esempio: -agents simulation:com.sysag_cds.superagents.Simulation(1,.5,0,.5,0,0.1,2)
+ *     Crea 1 agente Person, con il 50% di probabilità di essere SUSCEPTIBLE e il 50% di essere INFECTIOUS
+ *     Crea poi una mappa con 4 edifici
+ */
 public class Simulation extends Agent {
     public static int tick = 1000;
     public static boolean debug = true;

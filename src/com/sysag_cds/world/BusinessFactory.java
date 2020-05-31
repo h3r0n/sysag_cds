@@ -8,6 +8,10 @@ import jade.wrapper.StaleProxyException;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * Classe factory che crea agenti di tipo Business nel container corrente in edifici diversi.
+ * Mantiene una lista delle posizioni usate.
+ */
 public class BusinessFactory {
 
     protected int count = 0;
