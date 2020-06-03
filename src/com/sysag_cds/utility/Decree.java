@@ -11,10 +11,19 @@ public class Decree {
         NEVER
     }
 
+    private int decreeNumber = 1;
     private int WalkDistance = 10;
     private int maxTravel = 10;
     private LAW maskRequired = LAW.NEVER;
     private double density = 1;
+
+    public int getDecreeNumber() {
+        return decreeNumber;
+    }
+
+    public void setDecreeNumber(int DecreeNumber) {
+         decreeNumber=DecreeNumber;
+    }
 
     public int getWalkDistance() {
         return WalkDistance;
@@ -46,5 +55,16 @@ public class Decree {
 
     public void setDensity(double density) {
         this.density = density;
+    }
+
+    public LAW parseString(String s){
+        LAW result = null;
+        if(s.equals("ALWAYS"))
+            result=LAW.ALWAYS;
+        if(s.equals("INDOOR"))
+            result=LAW.INDOOR;
+        if(s.equals("NEVER"))
+            result=LAW.NEVER;
+        return result;
     }
 }

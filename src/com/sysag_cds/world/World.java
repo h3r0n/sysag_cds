@@ -30,10 +30,9 @@ public class World {
 
     public static World getInstance(int mapSize) {
         if (instance == null) {
-            return new World(mapSize);
-        } else {
-            return instance;
+            instance= new World(mapSize);
         }
+        return instance;
     }
 
     public static World getInstance() {

@@ -81,6 +81,7 @@ public class Business extends Agent {
      * Notifica aggiornamenti alle normative
      */
     public void subscribeDecrees() {
+        Decree currentDecree= new Decree();
         DFAgentDescription template = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
         sd.setType("Government");
@@ -98,9 +99,19 @@ public class Business extends Agent {
                             Iterator allProperties = sd.getAllProperties();
                             while (allProperties.hasNext()) {
                                 Property p = (Property) allProperties.next();
-                                if (p.getName().equals("Decree"))
-                                    manageDecree((Decree) p.getValue());
+                                if (p.getName().equals("decreeNumber"))
+                                    currentDecree.setDecreeNumber( Integer.parseInt((String)p.getValue()));
+                                if (p.getName().equals("walkDistance"))
+                                    currentDecree.setWalkDistance( Integer.parseInt((String)p.getValue()));
+                                if (p.getName().equals("maxTravel"))
+                                    currentDecree.setMaxTravel( Integer.parseInt((String)p.getValue()));
+                                if (p.getName().equals("maskRequired"))
+                                    currentDecree.setMaskRequired( currentDecree.parseString((String)p.getValue()));
+                                if (p.getName().equals("density"))
+                                    currentDecree.setDensity( Double.parseDouble((String)p.getValue()));
+
                             }
+                            manageDecree(currentDecree);
                         }
                     }
                 } catch (FIPAException fe) {

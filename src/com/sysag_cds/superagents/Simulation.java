@@ -40,8 +40,9 @@ public class Simulation extends Agent {
 
 
     protected void setup() {
-        startGovernment();  // avvia superagente Government
+
         startStatistics();  // avvia superagente Statistics
+        startGovernment();  // avvia superagente Government
 
         readArgs(getArguments());   // leggi argomenti
         World.getInstance(mapSize); // inizializza mappa

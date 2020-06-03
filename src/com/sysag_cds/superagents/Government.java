@@ -32,7 +32,11 @@ public class Government extends Agent {
         ServiceDescription sd = new ServiceDescription();
         sd.setType("Government");
         sd.setName(getLocalName());
-        sd.addProperties(new Property("Decree", currentDecree));
+        sd.addProperties(new Property("decreeNumber", currentDecree.getDecreeNumber()));
+        sd.addProperties(new Property("walkDistance",currentDecree.getWalkDistance()));
+        sd.addProperties(new Property("maxTravel", currentDecree.getMaxTravel()));
+        sd.addProperties(new Property("maskRequired",currentDecree.getMaskRequired()));
+        sd.addProperties(new Property("density",currentDecree.getDensity()));
         dfd.addServices(sd);
 
         return dfd;

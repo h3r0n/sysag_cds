@@ -72,6 +72,8 @@ public class Person extends TaskAgent {
     @Override
     protected void setup() {
 
+        statistics = findServiceAgent("Statistics");
+
         // inizializzazione agente
         Object[] args = this.getArguments();
         if (args != null) {
@@ -103,7 +105,6 @@ public class Person extends TaskAgent {
             }
         }
 
-        statistics = findServiceAgent("Statistics");
         subscribeDecrees();
 
         // supermercato
@@ -364,7 +365,8 @@ public class Person extends TaskAgent {
         ServiceDescription sd = new ServiceDescription();
         sd.setType("Contagion");
         sd.setName(getLocalName());
-        sd.addProperties(new Property("Location", position));   // location
+        sd.addProperties(new Property("Location", position.getLocation()));   // location
+        sd.addProperties(new Property("Densita", String.valueOf(position.getDensity())));   // location
         sd.addProperties(new Property("DPI", haveDPI()));   // boolean
         sd.addProperties(new Property("Distancing", distancing())); // double
         dfd.addServices(sd);
@@ -379,7 +381,8 @@ public class Person extends TaskAgent {
         DFAgentDescription template = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
         sd.setType("Contagion");
-        sd.addProperties(new Property("Location", position));
+        sd.addProperties(new Property("Location", position.getLocation()));   // location
+        sd.addProperties(new Property("Densita", String.valueOf(position.getDensity())));
         template.addServices(sd);
 
         SubscriptionInitiator subscription = new SubscriptionInitiator(
@@ -398,9 +401,9 @@ public class Person extends TaskAgent {
                             while (allProperties.hasNext()) {
                                 Property p = (Property) allProperties.next();
                                 if (p.getName().equals("DPI"))
-                                    infectiousDPI = (boolean) p.getValue();
+                                    infectiousDPI = Boolean.parseBoolean((String)p.getValue());
                                 if (p.getName().equals("Distancing"))
-                                    infectiousDist = (double) p.getValue();
+                                    infectiousDist = Double.parseDouble((String)p.getValue());
                             }
 
                             if (meet(infectiousDist) && contagion(infectiousDPI))
@@ -553,11 +556,15 @@ public class Person extends TaskAgent {
             while (allServices.hasNext()) {
                 ServiceDescription sd = (ServiceDescription) allServices.next();
                 Iterator allProperties = sd.getAllProperties();
+                Building buil=new Building("test");
                 while (allProperties.hasNext()) {
                     Property p = (Property) allProperties.next();
                     if (p.getName().equals("Location"))
-                        results.add((Building) p.getValue());
+                        buil.setLocation((String) p.getValue());
+                    if (p.getName().equals("Density"))
+                        buil.setDensity(Double.parseDouble((String) p.getValue()));
                 }
+                results.add(buil);
             }
         }
 
@@ -679,8 +686,16 @@ public class Person extends TaskAgent {
                             Iterator allProperties = sd.getAllProperties();
                             while (allProperties.hasNext()) {
                                 Property p = (Property) allProperties.next();
-                                if (p.getName().equals("Decree"))
-                                    currentDecree = (Decree) p.getValue();
+                                if (p.getName().equals("decreeNumber"))
+                                    currentDecree.setDecreeNumber( Integer.parseInt((String)p.getValue()));
+                                if (p.getName().equals("walkDistance"))
+                                    currentDecree.setWalkDistance( Integer.parseInt((String)p.getValue()));
+                                if (p.getName().equals("maxTravel"))
+                                    currentDecree.setMaxTravel( Integer.parseInt((String)p.getValue()));
+                                if (p.getName().equals("maskRequired"))
+                                    currentDecree.setMaskRequired( currentDecree.parseString((String) p.getValue()));
+                                if (p.getName().equals("density"))
+                                    currentDecree.setDensity( Double.parseDouble((String)p.getValue()));
                             }
                         }
                     }

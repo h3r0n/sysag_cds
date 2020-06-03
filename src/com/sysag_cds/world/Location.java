@@ -13,6 +13,10 @@ public class Location {
         location = l;
     }
 
+    public String getLocation(){ return location; }
+
+    public void setLocation(String loc){ location=loc;}
+
     public Double getDensity() {
         return density;
     }
