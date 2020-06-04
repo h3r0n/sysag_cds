@@ -366,9 +366,8 @@ public class Person extends TaskAgent {
         sd.setType("Contagion");
         sd.setName(getLocalName());
         sd.addProperties(new Property("Location", position.getLocation()));   // location
-        sd.addProperties(new Property("Densita", String.valueOf(position.getDensity())));   // location
-        sd.addProperties(new Property("DPI", haveDPI()));   // boolean
-        sd.addProperties(new Property("Distancing", distancing())); // double
+        sd.addProperties(new Property("DPI", Boolean.toString(haveDPI())));   // boolean
+        sd.addProperties(new Property("Distancing", Double.toString(distancing()))); // double
         dfd.addServices(sd);
 
         return dfd;
@@ -382,7 +381,6 @@ public class Person extends TaskAgent {
         ServiceDescription sd = new ServiceDescription();
         sd.setType("Contagion");
         sd.addProperties(new Property("Location", position.getLocation()));   // location
-        sd.addProperties(new Property("Densita", String.valueOf(position.getDensity())));
         template.addServices(sd);
 
         SubscriptionInitiator subscription = new SubscriptionInitiator(
@@ -539,7 +537,7 @@ public class Person extends TaskAgent {
         ServiceDescription sdt = new ServiceDescription();
         sdt.setType(category);
         if (!naughty)
-            sdt.addProperties(new Property("Open","True"));
+            sdt.addProperties(new Property("Open",Boolean.toString(true)));
         dfdt.addServices(sdt);
 
         // search

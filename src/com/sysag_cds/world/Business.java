@@ -71,7 +71,7 @@ public class Business extends Agent {
         sd.setName(getLocalName());
         sd.addProperties(new Property("Location", position));
         if (open)
-            sd.addProperties(new Property("Open","True"));
+            sd.addProperties(new Property("Open",Boolean.toString(true)));
         dfd.addServices(sd);
 
         return dfd;

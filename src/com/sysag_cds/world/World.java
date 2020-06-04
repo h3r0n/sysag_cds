@@ -91,8 +91,9 @@ public class World {
         Graph<Building,Road> kNeighbor = new KNeighborhoodFilter<Building,Road>(
                 begin,maxDistance,KNeighborhoodFilter.EdgeType.IN_OUT
         ).apply(map);
-
-        if (kNeighbor==null)
+        if (kNeighbor != null) {
+            kNeighbor.removeVertex(begin);
+        } else
             return null;
 
         int tries = 1;
@@ -105,9 +106,15 @@ public class World {
         if (destination == null || destination.equals(begin))
             return null;
 
+        List<Road> path = getPath(begin,destination);   // andata
+        if (path == null)
+            return null;
+        List<Road> rPath = new ArrayList<>(path);
+        Collections.reverse(rPath);     // ritorno
+
         Stream<Road> stream = Stream.of();
-        stream = Stream.concat(stream, getPath(begin,destination).stream());
-        stream = Stream.concat(stream, getPath(destination,begin).stream());
+        stream = Stream.concat(stream, path.stream());
+        stream = Stream.concat(stream, rPath.stream());
 
         return stream.collect(Collectors.toList());
     }
