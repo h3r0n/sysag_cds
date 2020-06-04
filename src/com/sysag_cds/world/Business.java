@@ -38,6 +38,8 @@ public class Business extends Agent {
                 position.setDensity(Double.parseDouble((String)args[2]));
             }
         }
+        System.out.println("business "+position.toString());
+        open=true;
         registerService();
         subscribeDecrees();
     }
@@ -69,9 +71,9 @@ public class Business extends Agent {
         ServiceDescription sd = new ServiceDescription();
         sd.setType(category);
         sd.setName(getLocalName());
-        sd.addProperties(new Property("Location", position));
-        if (open)
-            sd.addProperties(new Property("Open",Boolean.toString(true)));
+        sd.addProperties(new Property("Open",Boolean.toString(open)));
+        sd.addProperties(new Property("Location", position.getLocation()));
+        sd.addProperties(new Property("Density",position.density.toString()));
         dfd.addServices(sd);
 
         return dfd;
@@ -123,6 +125,6 @@ public class Business extends Agent {
     }
 
     void manageDecree(Decree d) {
-        setOpen(d.getDensity() < position.getDensity());
+        setOpen(d.getDensity() > position.getDensity());
     }
 }

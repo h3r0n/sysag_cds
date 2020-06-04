@@ -40,7 +40,7 @@ public class PersonFactory {
             workerArgs[0] = seirProb.getRandomStatus();    // assegna uno stato di salute casuale
             workerArgs[1] = buildingProb.getRandomBuilding().toString();   // assegna una casa casuale
             workerArgs[2] = BooleanProbability.getTrueFalse(naughtyProb);    // assegna una coscienziosità casuale
-            workerArgs[3] = buildingProb.getRandomBuilding().toString(); // assegna un posto di lavoro casuale
+            workerArgs[3] = wpProb.getRandomBuilding().toString(); // assegna un posto di lavoro casuale
 
             try {
                 AgentController a = c.createNewAgent("p" + count++, "com.sysag_cds.people.Worker", workerArgs);

@@ -63,13 +63,13 @@ public class World {
         return buildingList;
     }
 
-    public List<Road> getPath(Building begin, Building end) {
+    public synchronized List<Road> getPath(Building begin, Building end) {
         if (begin.equals(end))
             return null;
         return pathFinder.getPath(begin, end);
     }
 
-    public int getDistance(Building begin, Building end) {
+    public synchronized int getDistance(Building begin, Building end) {
         return pathFinder.getDistance(begin, end).intValue();
     }
 
@@ -97,6 +97,7 @@ public class World {
             return null;
 
         int tries = 1;
+
         Building destination = randomBuilding(kNeighbor);
         while ((destination == null || destination.equals(begin)) && tries <10) {
             destination = randomBuilding(kNeighbor);

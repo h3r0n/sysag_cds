@@ -24,7 +24,7 @@ public class Worker extends Person {
 
     Building workplace = null;
     int workTicks = 10;
-    int workInterval = 100;
+    int workInterval = 5;
     boolean working = false;
     double workContagion = 0.015;
 
@@ -38,6 +38,8 @@ public class Worker extends Person {
             workplace = World.getInstance().findBuilding(new Building((String) args[3]));
         }
 
+        System.out.println(this.getLocalName()+" è lavoratore in "+ workplace.toString());
+
         addBehaviour(new TickerBehaviour(this, Simulation.tick * workInterval) {
             protected void onTick() {
                 if (!working) {
@@ -48,14 +50,17 @@ public class Worker extends Person {
                         public void action() {
                             if (workplace != null && isOpen(workplace)) {
                                 task.addSubBehaviour(new TravelTask(myAgent, workplace));
-                                task.addSubBehaviour(new WaitingTask(myAgent, Simulation.tick * workInterval));
+                                task.addSubBehaviour(new WaitingTask(myAgent, Simulation.tick * workTicks));
                                 task.addSubBehaviour(new OneShotBehaviour() {
                                     @Override
                                     public void action() {
                                         working = false;
+                                        System.out.println(this.myAgent.getLocalName()+" ha finito di lavorare");
                                     }
                                 });
                                 task.addSubBehaviour(new TravelTask(myAgent, home));
+                            }else{
+                                working=false;
                             }
                         }
                     });
@@ -72,8 +77,8 @@ public class Worker extends Person {
         DFAgentDescription dfdt = new DFAgentDescription();
         ServiceDescription sdt = new ServiceDescription();
         if (!naughty)
-            sdt.addProperties(new Property("Open", "True"));
-        sdt.addProperties(new Property("Location", building));
+            sdt.addProperties(new Property("Open", true));
+        sdt.addProperties(new Property("Location", building.getLocation()));
         dfdt.addServices(sdt);
 
         // search

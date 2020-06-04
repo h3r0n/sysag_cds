@@ -58,6 +58,8 @@ public class Simulation extends Agent {
         for (int i = 0; i < nBusiness; i++)
             bf.create();
 
+        System.out.println(bf.getList().toString());
+        System.out.println(bf.getList().toString());
         RandomBuilding randomWorkplace = new RandomBuilding(bf.getList());   // edifici casuali per posti di lavoro
 
         // crea Persone

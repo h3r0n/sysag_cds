@@ -39,15 +39,15 @@ public class Person extends TaskAgent {
 
     // costanti
     static int seirDelta = 2;   // tempo di incubazione (da EXPOSED a INFECTIOUS)
-    static int seirGamma = 100;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
-    static int walkingTime = 1; // tempo per percorrere una strada
+    static int seirGamma = 1000;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
+    static int walkingTime = 10; // tempo per percorrere una strada
     static int maxfood = 10;    // dimensione riserva beni di prima necessità
-    static int deltaFoodTicks = 10; // tempo di riduzione beni di prima necessità
+    static int deltaFoodTicks = 1; // tempo di riduzione beni di prima necessità
     static int staySupermarketTicks = 10; // tempo di permanenza al supermercato
     static int deltaIllTicks = 10; // tempo di insorgenza di malattia
     static int stayHospitalTicks = 10; // tempo di degenza in ospedale
     static int walkingTicks = 10;    // tempo tra passeggiate
-    static int parkTicks = 100;
+    static int parkTicks = 10;
     static int stayParkTicks = 10;
     static double deathProbability = 0.1;
     static double illProbability = 0.1;
@@ -119,6 +119,7 @@ public class Person extends TaskAgent {
                         public void action() {
                         Building destination = findNearestBusiness("SuperMarket");
                         if (destination!=null) {
+                            System.out.println(this.myAgent.getLocalName()+" cibo diminuito");
                             task.addSubBehaviour(new TravelTask(myAgent, destination));
                             task.addSubBehaviour(new WaitingTask(myAgent, Simulation.tick * staySupermarketTicks));
                             task.addSubBehaviour(new OneShotBehaviour() {
@@ -169,6 +170,7 @@ public class Person extends TaskAgent {
                         public void action() {
                             Building destination = findNearestBusiness("Hospital");
                             if (destination!=null) {
+                                System.out.println(this.myAgent.getLocalName()+" si è ammalato");
                                 task.addSubBehaviour(new TravelTask(myAgent, destination));
                                 task.addSubBehaviour(new WaitingTask(myAgent, Simulation.tick * stayHospitalTicks));
                                 task.addSubBehaviour(new OneShotBehaviour() {
@@ -192,15 +194,15 @@ public class Person extends TaskAgent {
         // parco
         addBehaviour(new TickerBehaviour(this, Simulation.tick * parkTicks) {
             protected void onTick() {
-                food--;
-                if (!goingSuperMarket && food < 0) {
-                    goingSuperMarket = true;
+                if (!goingPark) {
+                    goingPark = true;
                     SequentialBehaviour task = new SequentialBehaviour();
                     task.addSubBehaviour(new OneShotBehaviour() {
                         @Override
                         public void action() {
                         Building destination = findNearestBusiness("Park");
                         if (destination!=null) {
+                            System.out.println(this.myAgent.getLocalName()+" ha voglia di andare al parco");
                             task.addSubBehaviour(new TravelTask(myAgent, destination));
                             task.addSubBehaviour(new WaitingTask(myAgent, Simulation.tick * stayParkTicks));
                             task.addSubBehaviour(new OneShotBehaviour() {
@@ -318,7 +320,7 @@ public class Person extends TaskAgent {
 
     public void setLocation(Location l) {
 
-        System.out.println("L'agente " + getLocalName() + " si sposta in " + l.toString());
+        //System.out.println("L'agente " + getLocalName() + " si sposta in " + l.toString());
 
         if (isSusceptible())
             unsubscribeAll();
@@ -419,8 +421,8 @@ public class Person extends TaskAgent {
     }
 
     public void unsubscribeAll() {
-        if (Simulation.debug)
-            System.out.println(getLocalName() + " unsubscribed");
+        //if (Simulation.debug)
+            //System.out.println(getLocalName() + " unsubscribed");
 
         for (SubscriptionInitiator s : subscriptions) {
             s.cancel(getDefaultDF(), true);
@@ -449,6 +451,7 @@ public class Person extends TaskAgent {
 
                     if (path!=null) {
                         for (Road r : path) {
+                            //System.out.println("L'agente "+this.myAgent.getLocalName()+" si trova nella strada "+r.toString());
                             addSubBehaviour(new DelayBehaviour(myAgent, Simulation.tick * walkingTime) {
                                 @Override
                                 protected void onWake() {
@@ -477,7 +480,7 @@ public class Person extends TaskAgent {
         int ticks;
 
         public WaitingTask(Agent a, int ticks) {
-            super(a, Simulation.tick * ticks);
+            super(a, ticks);
         }
 
         @Override
@@ -511,6 +514,7 @@ public class Person extends TaskAgent {
                             @Override
                             protected void onWake() {
                                 setLocation(start);
+                                System.out.println(this.myAgent.getLocalName()+" ha finito la passeggiata");
                             }
                         });
                     }
@@ -537,7 +541,7 @@ public class Person extends TaskAgent {
         ServiceDescription sdt = new ServiceDescription();
         sdt.setType(category);
         if (!naughty)
-            sdt.addProperties(new Property("Open",Boolean.toString(true)));
+          sdt.addProperties(new Property("Open",true));
         dfdt.addServices(sdt);
 
         // search
@@ -565,10 +569,10 @@ public class Person extends TaskAgent {
                 results.add(buil);
             }
         }
-
         // pick the closest
         if (results.size()>0) {
             closest = results.get(0);
+            System.out.println(this.getLocalName()+" getDistance="+position.toString()+" "+closest.toString());
             minDist = map.getDistance((Building) position, closest);
 
             for (Building b : results) {
