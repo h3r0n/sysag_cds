@@ -10,6 +10,8 @@ import jade.domain.FIPAException;
 import jade.gui.GuiAgent;
 import jade.gui.GuiEvent;
 
+import javax.swing.*;
+
 /**
  * L'agente Government può emanare decreti riguardo il distanziamento sociale, la chiusura di Business
  * e l'obbligo di indossare DPI.
@@ -21,6 +23,11 @@ public class Government extends GuiAgent {
     @Override
     protected void setup() {
         registerService();
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         new GovGui(this);
     }
 

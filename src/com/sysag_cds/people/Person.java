@@ -670,7 +670,10 @@ public class Person extends TaskAgent {
     // True se due persone si avvicinano
     boolean meet(double infectiousDist) {
         double susceptibleDist = distancing();
-        return BooleanProbability.getBoolean(Math.max(infectiousDist,susceptibleDist));
+        boolean m = BooleanProbability.getBoolean(Math.max(infectiousDist,susceptibleDist));
+        if (Simulation.debug)
+            System.out.println("Meet: "+m+", Prob: "+Math.max(infectiousDist,susceptibleDist));
+        return m;
     }
 
     // True se avviene il contagio
@@ -687,7 +690,12 @@ public class Person extends TaskAgent {
         if (infectiousDPI && susceptibleDPI)
             probability = .015;
 
-        return BooleanProbability.getBoolean(probability);
+        boolean c = BooleanProbability.getBoolean(probability);
+
+        if (Simulation.debug)
+            System.out.println("Contagion: "+c+", DPI: "+infectiousDPI+haveDPI()+", home: "+position.equals(home));
+
+        return c;
     }
 
     // Probabilità di avvicinarsi a qualcuno
@@ -728,6 +736,8 @@ public class Person extends TaskAgent {
                 this, DFService.createSubscriptionMessage(this, getDefaultDF(), template, null)) {
             protected void handleInform(ACLMessage inform) {
                 try {
+                    if (Simulation.debug)
+                        System.out.println(getLocalName()+" received a new decree");
                     DFAgentDescription[] dfds = DFService.decodeNotification(inform.getContent());
                     for (DFAgentDescription dfd : dfds) {
                         Iterator allServices = dfd.getAllServices();
