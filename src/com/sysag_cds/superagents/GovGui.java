@@ -11,11 +11,14 @@ import static javax.swing.GroupLayout.Alignment.*;
 public class GovGui {
     GuiAgent myAgent;
     JLabel maskLabel = new JLabel("Obbligo DPI: ");
+    JLabel parkLabel = new JLabel("Apertura Parchi:");
     JLabel densityLabel = new JLabel("Distanziamento: ");
     JLabel walkLabel = new JLabel("Distanza passeggiata: ");
 
     String[] maskOptions = {"Mai", "Al chiuso", "Sempre"};
+    String[] parkOptions = {"Si","No"};
     JComboBox<String> maskCombo = new JComboBox<>(maskOptions);
+    JComboBox<String> parkCombo = new JComboBox<>(parkOptions);
     JSlider densitySlider =  new JSlider (JSlider.HORIZONTAL, 0, 100, 100);
     JTextField walkInput = new JTextField("10");
     JButton sendButton = new JButton("Emana decreto");
@@ -50,11 +53,13 @@ public class GovGui {
         decreeLayout.setHorizontalGroup(decreeLayout.createSequentialGroup()
                 .addGroup(decreeLayout.createParallelGroup(LEADING)
                         .addComponent(maskLabel)
+                        .addComponent(parkLabel)
                         .addComponent(densityLabel)
                         .addComponent(walkLabel)
                 )
                 .addGroup(decreeLayout.createParallelGroup(LEADING)
                         .addComponent(maskCombo)
+                        .addComponent(parkCombo)
                         .addComponent(densitySlider)
                         .addComponent(walkInput)
                 )
@@ -64,6 +69,10 @@ public class GovGui {
                 .addGroup(decreeLayout.createParallelGroup(CENTER)
                         .addComponent(maskLabel)
                         .addComponent(maskCombo)
+                )
+                .addGroup(decreeLayout.createParallelGroup(CENTER)
+                        .addComponent(parkLabel)
+                        .addComponent(parkCombo)
                 )
                 .addGroup(decreeLayout.createParallelGroup(CENTER)
                         .addComponent(densityLabel)
@@ -92,6 +101,7 @@ public class GovGui {
     private GuiEvent createEvent() {
         GuiEvent e = new GuiEvent(this,0);
         e.addParameter(maskCombo.getSelectedIndex());
+        e.addParameter(parkCombo.getSelectedIndex());
         e.addParameter((double) densitySlider.getValue()/100);
         try {
             e.addParameter(Integer.parseInt(walkInput.getText()));

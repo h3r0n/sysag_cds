@@ -39,7 +39,7 @@ public class BusinessFactory {
 
         try {
             AgentController a = c.createNewAgent(
-                    "bus" + count++, "com.sysag_cds.world.Business", businessArgs
+                    "bus" + count++, "com.sysag_cds.world.Business", businessArgs.clone()
             );
             a.start();
         } catch (StaleProxyException e) {

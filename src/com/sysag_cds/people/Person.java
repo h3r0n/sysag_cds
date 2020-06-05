@@ -39,8 +39,8 @@ public class Person extends TaskAgent {
 
     // costanti
     static int seirDelta = 2;   // tempo di incubazione (da EXPOSED a INFECTIOUS)
-    static int seirGamma = 1000;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
-    static int walkingTime = 10; // tempo per percorrere una strada
+    static int seirGamma = 100;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
+    static int walkingTime = 1; // tempo per percorrere una strada
     static int maxfood = 10;    // dimensione riserva beni di prima necessità
     static int deltaFoodTicks = 1; // tempo di riduzione beni di prima necessità
     static int staySupermarketTicks = 10; // tempo di permanenza al supermercato
@@ -49,7 +49,7 @@ public class Person extends TaskAgent {
     static int walkingTicks = 10;    // tempo tra passeggiate
     static int parkTicks = 10;
     static int stayParkTicks = 10;
-    static double deathProbability = 0.1;
+    static double deathProbability = 0.20;
     static double illProbability = 0.01;
 
     // status

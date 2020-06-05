@@ -45,6 +45,7 @@ public class Government extends GuiAgent {
         sd.addProperties(new Property("decreeNumber", currentDecree.getDecreeNumber()));
         sd.addProperties(new Property("walkDistance",currentDecree.getWalkDistance()));
         sd.addProperties(new Property("maxTravel", currentDecree.getMaxTravel()));
+        sd.addProperties(new Property("parkOpen",currentDecree.getParkOpen()));
         sd.addProperties(new Property("maskRequired",currentDecree.getMaskRequired()));
         sd.addProperties(new Property("density",currentDecree.getDensity()));
         dfd.addServices(sd);
@@ -74,13 +75,25 @@ public class Government extends GuiAgent {
         switch ((int) ev.getParameter(0)) {
             case 0:
                 d.setMaskRequired(Decree.LAW.NEVER);
+                break;
             case 1:
                 d.setMaskRequired(Decree.LAW.INDOOR);
+                break;
             case 2:
                 d.setMaskRequired(Decree.LAW.ALWAYS);
+                break;
         }
-        d.setDensity((double) ev.getParameter(1));
-        d.setWalkDistance((int) ev.getParameter(2));
+        switch ((int) ev.getParameter(1)) {
+            case 0:
+                d.setParkOpen(true);
+                break;
+            case 1:
+                d.setParkOpen(false);
+                break;
+        }
+        d.setDensity((double) ev.getParameter(2));
+        d.setWalkDistance((int) ev.getParameter(3));
+        //System.out.println("Obbligo Mascherina= "+d.getMaskRequired().toString()+" Parchi Aperti= "+d.getParkOpen()+" Distanziamento= "+d.getDensity()+" Distanza Passeggiata="+d.getWalkDistance()+" ");
         updateDecree(d);
     }
 }

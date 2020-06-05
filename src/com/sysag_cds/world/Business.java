@@ -44,9 +44,18 @@ public class Business extends Agent {
         subscribeDecrees();
     }
 
-    public void setOpen(boolean open) {
-        this.open = open;
+    public void setOpen(boolean open,boolean park) {
+        if(park && category.equals("Park")) {
+            this.open = open;
+        }
+        if(!park && category.equals("Park")){
+            this.open = park;
+        }
+        if(!category.equals("Park")){
+            this.open = open;
+        }
         updateService();
+        //System.out.println("Open= "+open+" "+"Park= "+category+park+" "+"Open2= "+this.open+" ");
     }
 
     private void registerService() {
@@ -112,6 +121,8 @@ public class Business extends Agent {
                                     currentDecree.setMaskRequired( currentDecree.parseString((String)p.getValue()));
                                 if (p.getName().equals("density"))
                                     currentDecree.setDensity( Double.parseDouble((String)p.getValue()));
+                                if (p.getName().equals("parkOpen"))
+                                    currentDecree.setParkOpen( Boolean.parseBoolean((String)p.getValue()));
 
                             }
                             manageDecree(currentDecree);
@@ -126,6 +137,6 @@ public class Business extends Agent {
     }
 
     void manageDecree(Decree d) {
-        setOpen(d.getDensity() > position.getDensity());
+        setOpen(d.getDensity() > position.getDensity(),d.getParkOpen());
     }
 }

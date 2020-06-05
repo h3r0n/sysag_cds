@@ -14,6 +14,7 @@ public class Decree {
     private int decreeNumber = 1;
     private int WalkDistance = 10;
     private int maxTravel = 10;
+    private boolean parkOpen = true;
     private LAW maskRequired = LAW.NEVER;
     private double density = 1;
 
@@ -39,6 +40,14 @@ public class Decree {
 
     public void setMaxTravel(int maxTravel) {
         this.maxTravel = maxTravel;
+    }
+
+    public boolean getParkOpen() {
+        return parkOpen;
+    }
+
+    public void setParkOpen(boolean parkOpen) {
+        this.parkOpen = parkOpen;
     }
 
     public LAW getMaskRequired() {
