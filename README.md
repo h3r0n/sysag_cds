@@ -1,4 +1,4 @@
-# Benvenuti nella wiki del progetto sysag_cds !
+# Benvenuti nella wiki del progetto sysag_cds
 Tale progetto ha lo scopo di realizzare una simulazione della diffusione del COVID-19 mediante un sistema multi-agente.\
 La simulazione riproduce tramite agenti le principali azioni svolte dalle loro controparti umane, e ha lo scopo di mostrare dinamicamente come e quanto le precauzioni e le norme igieniche posso contrastare la diffusione del virus.\
 La simulazione è caratterizzata da diverse entità e dinamiche di interazioni, ognuna descritta nella apposita pagina relativa.
