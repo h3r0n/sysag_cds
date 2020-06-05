@@ -43,7 +43,7 @@ public class PersonFactory {
             workerArgs[3] = wpProb.getRandomBuilding().toString(); // assegna un posto di lavoro casuale
 
             try {
-                AgentController a = c.createNewAgent("p" + count++, "com.sysag_cds.people.Worker", workerArgs);
+                AgentController a = c.createNewAgent("p" + count++, "com.sysag_cds.people.Worker", workerArgs.clone());
                 a.start();
             } catch (StaleProxyException e) {
                 e.printStackTrace();
@@ -56,7 +56,7 @@ public class PersonFactory {
             personArgs[2] = BooleanProbability.getTrueFalse(naughtyProb);    // assegna una coscienziosità casuale
 
             try {
-                AgentController a = c.createNewAgent("p" + count++, "com.sysag_cds.people.Person", personArgs);
+                AgentController a = c.createNewAgent("p" + count++, "com.sysag_cds.people.Person", personArgs.clone());
                 a.start();
             } catch (StaleProxyException e) {
                 e.printStackTrace();

@@ -38,7 +38,7 @@ public class Worker extends Person {
             workplace = World.getInstance().findBuilding(new Building((String) args[3]));
         }
 
-        System.out.println(this.getLocalName()+" è lavoratore in "+ workplace.toString());
+        System.out.println(this.getLocalName()+" works in "+ workplace.toString());
 
         addBehaviour(new TickerBehaviour(this, Simulation.tick * workInterval) {
             protected void onTick() {
@@ -55,16 +55,21 @@ public class Worker extends Person {
                                     @Override
                                     public void action() {
                                         working = false;
-                                        System.out.println(this.myAgent.getLocalName()+" ha finito di lavorare");
+                                        if (Simulation.debug)
+                                            System.out.println(getLocalName()+" is coming back home from work.");
                                     }
                                 });
                                 task.addSubBehaviour(new TravelTask(myAgent, home));
                             }else{
                                 working=false;
+                                if (Simulation.debug)
+                                    System.out.println(getLocalName()+" cannot go to work.");
                             }
                         }
                     });
                     scheduleTask(task);
+                    if (Simulation.debug)
+                        System.out.println(getLocalName()+" has to go to work.");
                 }
             }
         });
