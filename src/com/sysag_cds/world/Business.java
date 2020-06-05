@@ -44,16 +44,8 @@ public class Business extends Agent {
         subscribeDecrees();
     }
 
-    public void setOpen(boolean open,boolean park) {
-        if(park && category.equals("Park")) {
-            this.open = open;
-        }
-        if(!park && category.equals("Park")){
-            this.open = park;
-        }
-        if(!category.equals("Park")){
-            this.open = open;
-        }
+    public void setOpen(boolean open) {
+        this.open = open;
         updateService();
         //System.out.println("Open= "+open+" "+"Park= "+category+park+" "+"Open2= "+this.open+" ");
     }
@@ -137,6 +129,9 @@ public class Business extends Agent {
     }
 
     void manageDecree(Decree d) {
-        setOpen(d.getDensity() > position.getDensity(),d.getParkOpen());
+        boolean open = d.getDensity() > position.getDensity();
+        if (category.equals("Park") && !d.getParkOpen())
+            open = false;
+        setOpen(open);
     }
 }
