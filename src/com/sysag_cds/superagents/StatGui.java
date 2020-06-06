@@ -5,6 +5,9 @@ import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.style.Styler;
+import org.knowm.xchart.style.markers.Marker;
+import org.knowm.xchart.style.markers.None;
+import org.knowm.xchart.style.markers.SeriesMarkers;
 
 import javax.swing.*;
 
@@ -17,8 +20,11 @@ public class StatGui {
 
     JFrame frame = new JFrame("Statistics");
     XYChart chart;
-    List<Integer> datax = new LinkedList<>();
-    List<Integer> datay = new LinkedList<>();
+    List<Double> datax = new LinkedList<>();
+    List<Integer> datatp = new LinkedList<>();
+    List<Integer> datacp = new LinkedList<>();
+    List<Integer> datar = new LinkedList<>();
+    List<Integer> datad = new LinkedList<>();
     JPanel chartPanel;
 
     StatGui() {
@@ -26,14 +32,32 @@ public class StatGui {
     }
 
     private void buildGui() {
-        datax.add(0);
-        datay.add(0);
+        datax.add(0.0);
+        datatp.add(0);
+        datacp.add(0);
+        datar.add(0);
+        datad.add(0);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-        chart = new XYChartBuilder().width(600).height(400).title("Andamento contagio").xAxisTitle("Tempo").yAxisTitle("Numero").build();
-        chart.addSeries("Infected", datax, datay);
+        chart = new XYChartBuilder().width(600).height(400).title("Andamento contagio").xAxisTitle("Giorni").yAxisTitle("Casi").build();
         chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNW);
-        chart.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Area);
+        chart.getStyler().setChartBackgroundColor(new Color(247,246,242));
+        //chart.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Area);
+
+        chart.addSeries("Totale positivi", datax, datatp);
+        chart.getSeriesMap().get("Totale positivi").setLineColor(new Color(239,78,99));
+
+        chart.addSeries("Attualmente positivi", datax, datacp);
+        chart.getSeriesMap().get("Attualmente positivi").setLineColor(new Color(245,149,143));
+
+        chart.addSeries("Guariti", datax, datar);
+        chart.getSeriesMap().get("Guariti").setLineColor(new Color(24,178,144));
+
+        chart.addSeries("Morti", datax, datad);
+        chart.getSeriesMap().get("Morti").setLineColor(new Color(10,10,10));
+
+        for (XYSeries s : chart.getSeriesMap().values())
+            s.setMarker(SeriesMarkers.NONE);
 
         chartPanel = new XChartPanel<>(chart);
         frame.add(chartPanel, BorderLayout.CENTER);
@@ -42,14 +66,20 @@ public class StatGui {
         frame.setVisible(true);
     }
 
-    void addData(int x, int y) {
+    void addData(double x, int tp, int cp, int r, int d) {
         datax.add(x);
-        datay.add(y);
+        datatp.add(tp);
+        datacp.add(cp);
+        datar.add(r);
+        datad.add(d);
         update();
     }
 
     void update() {
-        chart.updateXYSeries("Infected", datax,datay,null);
+        chart.updateXYSeries("Totale positivi", datax,datatp,null);
+        chart.updateXYSeries("Attualmente positivi", datax, datacp,null);
+        chart.updateXYSeries("Guariti", datax, datar,null);
+        chart.updateXYSeries("Morti", datax, datad,null);
         chartPanel.revalidate();
         chartPanel.repaint();
     }

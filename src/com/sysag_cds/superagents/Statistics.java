@@ -1,19 +1,19 @@
 package com.sysag_cds.superagents;
 
+import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
-import jade.gui.GuiAgent;
 import jade.gui.GuiEvent;
 import jade.lang.acl.ACLMessage;
 
 /**
  * L'agente Statistics raccoglie i numeri relativi al contagio e li stampa periodicamente.
  */
-public class Statistics extends GuiAgent {
+public class Statistics extends Agent {
 
     private int dead = 0;
     private int recovered = 0;
@@ -21,17 +21,19 @@ public class Statistics extends GuiAgent {
     private int currentInfected = 0;
     private static int updateTicks = 5;
     int time = 0;
+    StatGui gui = new StatGui();
 
     @Override
     protected void setup() {
-        StatGui gui = new StatGui();
         addBehaviour(new manageStatsCounts());
         registerStatisticsService();
         addBehaviour(new TickerBehaviour(this, Simulation.tick * updateTicks) {
             @Override
             protected void onTick() {
-                printStatistics();
-                gui.addData(time+=updateTicks,infected);
+                time+=updateTicks;
+                if (Simulation.debug)
+                    printStatistics();
+                gui.addData((double) time/60,infected,currentInfected,recovered,dead);
             }
         });
     }
@@ -50,9 +52,6 @@ public class Statistics extends GuiAgent {
             fe.printStackTrace();
         }
     }
-
-    @Override
-    protected void onGuiEvent(GuiEvent guiEvent) {}
 
     class manageStatsCounts extends CyclicBehaviour {
         @Override
