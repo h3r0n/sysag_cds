@@ -45,19 +45,23 @@ public class Person extends TaskAgent {
     static int deltaFoodTicks = 1; // tempo di riduzione beni di prima necessità
     static int staySupermarketTicks = 10; // tempo di permanenza al supermercato
     static int deltaIllTicks = Simulation.day; // tempo di possibile insorgenza di malattia
-    static int stayHospitalTicks = (int)(.5*Simulation.day); // tempo di degenza in ospedale
+    static int stayHospitalTicks = 2*Simulation.day; // tempo di degenza in ospedale
     static int walkingTicks = Simulation.day;    // tempo tra passeggiate
     static int parkTicks = 2*Simulation.day;    // tempo tra visite al parco
     static int stayParkTicks = (int)(.5*Simulation.day);    // tempo di permanenza al parco
-    static int stayEventTicks = (int)(.5*Simulation.day);    // tempo di permanenza ad un evento
-    static double deathProbability = 0.20;  // probabilità di morire al termine della malattia
-    static double illProbability = 0.1;     // probabilità giornaliera di necessitare un ricovero
     static double eventProbability = 0.2;   // probabilità di accettare un invito ad un evento
+    static int stayEventTicks = (int)(.5*Simulation.day);    // tempo di permanenza ad un evento
+    static double illProbability = 0.01;     // probabilità giornaliera di necessitare dell'ospedale
+    static double diseaseIllProbability = 0.05; // probabilità giornaliera di necessitare dell'ospedale se ammalati
+    static double deathProbability = 0.05;  // probabilità giornaliera di morire con la malattia e ricovero
+    static double outDeathProbability = 0.7;  // probabilità giornaliera di morire con la malattia e degenza negata in ospedale
 
     // status
     int food = maxfood;  // riserva beni di prima necessità
     boolean goingSuperMarket = false;
     boolean goingHospital = false;
+    boolean noHospital = false; // negata degenza in ospedale
+    boolean bedTaken = false; // assegnato un letto in ospedale
     boolean ill = false;
     boolean goingPark = false;
     boolean goingWalk = false;
@@ -110,6 +114,8 @@ public class Person extends TaskAgent {
         }
 
         subscribeDecrees();
+        subscribeHealthCare();
+        subscribeEvents();
 
         // supermercato
         addBehaviour(new TickerBehaviour(this, Simulation.tick * deltaFoodTicks) {
@@ -206,7 +212,10 @@ public class Person extends TaskAgent {
                         @Override
                         public void action() {
                             Building destination = findNearestBusiness("Hospital");
-                            if (destination!=null) {
+                            if (destination!=null && beds>0) {
+                                noHospital = false;
+                                bedTaken = true;
+                                updateBeds(true);
                                 task.addSubBehaviour(new OneShotBehaviour() {
                                     @Override
                                     public void action() {
@@ -221,12 +230,15 @@ public class Person extends TaskAgent {
                                     public void action() {
                                         ill = false;
                                         goingHospital = false;
+                                        bedTaken = false;
+                                        updateBeds(false);
                                         if (Simulation.debug)
                                             System.out.println(getLocalName()+" is coming back home from the Hospital.");
                                     }
                                 });
                                 task.addSubBehaviour(new TravelTask(myAgent, home));
                             } else {
+                                noHospital = true;
                                 goingHospital = false;
                                 if (Simulation.debug)
                                     System.out.println(getLocalName()+" cannot go to the Hospital.");
@@ -234,6 +246,19 @@ public class Person extends TaskAgent {
                         }
                     });
                     scheduleTask(task);
+                }
+            }
+        });
+
+        // morte da covid: si può morire se si è infetti(isInfectious) e con sintomi(ill)
+        addBehaviour(new TickerBehaviour(this, Simulation.tick * deltaIllTicks) {
+            @Override
+            protected void onTick() {
+                if (ill && isInfectious() && randomDeath()) {
+                    if (bedTaken)
+                        updateBeds(false);
+                    updateStatistics("Dead"); //Manda messaggio all'agente Statistics
+                    myAgent.doDelete();
                 }
             }
         });
@@ -350,12 +375,7 @@ public class Person extends TaskAgent {
         if (Simulation.debug)
             System.out.println(getLocalName() + " has recovered");
 
-        if (randomDeath()) {
-            updateStatistics("Dead"); //Manda messaggio all'agente Statistics
-            this.doDelete();
-        } else {
-            updateStatistics("Recovered"); //Manda messaggio all'agente Statistics
-        }
+        updateStatistics("Recovered");
     }
 
     public boolean isRecovered() {
@@ -363,11 +383,18 @@ public class Person extends TaskAgent {
     }
 
     boolean randomDeath() {
-        return BooleanProbability.getBoolean(deathProbability);
+        if (noHospital) {
+            return BooleanProbability.getBoolean(outDeathProbability);
+        } else {
+            return BooleanProbability.getBoolean(deathProbability);
+        }
     }
 
     boolean randomIllness() {
-        return BooleanProbability.getBoolean(illProbability);
+        if (isInfectious())
+            return BooleanProbability.getBoolean(diseaseIllProbability);
+        else
+            return BooleanProbability.getBoolean(illProbability);
     }
 
     // ------------------------------------
