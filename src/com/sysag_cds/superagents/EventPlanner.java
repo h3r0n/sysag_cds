@@ -20,7 +20,7 @@ import java.util.List;
 
 public class EventPlanner extends Agent {
 
-    static int eventTick = Simulation.day;
+    static int eventTick = 3*Simulation.day;
     boolean firstEvent = true;
     boolean allowed = true;
 

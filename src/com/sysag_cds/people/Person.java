@@ -38,19 +38,19 @@ public class Person extends TaskAgent {
     }
 
     // costanti
-    static int seirDelta = 7*Simulation.day;   // tempo di incubazione (da EXPOSED a INFECTIOUS)
-    static int seirGamma = 14*Simulation.day;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
+    int seirDelta = 7*Simulation.day;   // tempo di incubazione (da EXPOSED a INFECTIOUS)
+    int seirGamma = 14*Simulation.day;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
     static int walkingTime = 1; // tempo per percorrere una strada
-    static int maxfood = 2*Simulation.day;    // dimensione riserva beni di prima necessità
+    int maxfood = 2*Simulation.day;    // dimensione riserva beni di prima necessità
     static int deltaFoodTicks = 1; // tempo di riduzione beni di prima necessità
-    static int staySupermarketTicks = 10; // tempo di permanenza al supermercato
+    int staySupermarketTicks = 10; // tempo di permanenza al supermercato
     static int deltaIllTicks = Simulation.day; // tempo di possibile insorgenza di malattia
-    static int stayHospitalTicks = 2*Simulation.day; // tempo di degenza in ospedale
-    static int walkingTicks = Simulation.day;    // tempo tra passeggiate
-    static int parkTicks = 2*Simulation.day;    // tempo tra visite al parco
-    static int stayParkTicks = (int)(.5*Simulation.day);    // tempo di permanenza al parco
+    int stayHospitalTicks = 2*Simulation.day; // tempo di degenza in ospedale
+    int walkingTicks = Simulation.day;    // tempo tra passeggiate
+    int parkTicks = 2*Simulation.day;    // tempo tra visite al parco
+    int stayParkTicks = (int)(.5*Simulation.day);    // tempo di permanenza al parco
     static double eventProbability = 0.2;   // probabilità di accettare un invito ad un evento
-    static int stayEventTicks = (int)(.5*Simulation.day);    // tempo di permanenza ad un evento
+    int stayEventTicks = (int)(.5*Simulation.day);    // tempo di permanenza ad un evento
     static double illProbability = 0.01;     // probabilità giornaliera di necessitare dell'ospedale
     static double diseaseIllProbability = 0.05; // probabilità giornaliera di necessitare dell'ospedale se ammalati
     static double deathProbability = 0.05;  // probabilità giornaliera di morire con la malattia e ricovero
@@ -79,6 +79,8 @@ public class Person extends TaskAgent {
 
     @Override
     protected void setup() {
+
+        randomize();
 
         if (Simulation.debug)
             System.out.println(getLocalName() + " started.");
@@ -938,5 +940,27 @@ public class Person extends TaskAgent {
         msg.addReceiver(new AID("HealthCare", AID.ISLOCALNAME));
         msg.setContent(Boolean.toString(b));
         send(msg);
+    }
+
+    // ------------------------------------
+    //
+    // ------------------------------------
+
+    static int randomize(int value) {
+        double base = (double) value * .5;
+        double top = (double) value * Math.random();
+        return (int) (base+top);
+    }
+
+    void randomize() {
+        seirDelta = randomize(seirDelta);
+        seirGamma = randomize(seirGamma);
+        maxfood = randomize(maxfood);
+        staySupermarketTicks = randomize(staySupermarketTicks);
+        stayHospitalTicks = randomize(stayHospitalTicks);
+        walkingTicks = randomize(walkingTicks);
+        parkTicks = randomize(parkTicks);
+        stayParkTicks = randomize(stayParkTicks);
+        stayEventTicks = randomize(stayEventTicks);
     }
 }
