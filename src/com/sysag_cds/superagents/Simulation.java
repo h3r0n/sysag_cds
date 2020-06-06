@@ -53,7 +53,7 @@ public class Simulation extends Agent {
         BusinessFactory bf = new BusinessFactory(
                 this,   // agente che crea gli agenti Business
                 randomBuilding, // selezionatore casuale di Building in cui posizionare il business
-                new RandomBusiness(new double[]{.3, .3, .3})    // selezionatore casuale di categorie di business
+                new RandomBusiness(new double[]{.3, .1, .2, .2, .2})    // selezionatore casuale di categorie di business
         );
 
         for (int i = 0; i < nBusiness; i++)

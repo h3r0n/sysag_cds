@@ -15,6 +15,7 @@ public class Decree {
     private int WalkDistance = 10;
     private int maxTravel = 10;
     private boolean parkOpen = true;
+    private boolean nonEssentialOpen = true;
     private LAW maskRequired = LAW.NEVER;
     private double density = 1;
 
@@ -48,6 +49,14 @@ public class Decree {
 
     public void setParkOpen(boolean parkOpen) {
         this.parkOpen = parkOpen;
+    }
+
+    public boolean getNonEssentialOpen() {
+        return nonEssentialOpen;
+    }
+
+    public void setNonEssentialOpen(boolean nonEssentialOpen) {
+        this.nonEssentialOpen = nonEssentialOpen;
     }
 
     public LAW getMaskRequired() {

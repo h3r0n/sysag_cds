@@ -1,7 +1,9 @@
 package com.sysag_cds.superagents;
 
+import com.sysag_cds.utility.Decree;
 import jade.gui.GuiAgent;
 import jade.gui.GuiEvent;
+import javafx.scene.control.CheckBox;
 
 import java.awt.*;
 import java.util.Hashtable;
@@ -11,14 +13,16 @@ import static javax.swing.GroupLayout.Alignment.*;
 public class GovGui {
     GuiAgent myAgent;
     JLabel maskLabel = new JLabel("Obbligo DPI: ");
-    JLabel parkLabel = new JLabel("Apertura Parchi:");
+    JLabel nonEssentialLabel = new JLabel("Attività non essenziali:");
+    JLabel parkLabel = new JLabel("Parchi:");
     JLabel densityLabel = new JLabel("Distanziamento: ");
     JLabel walkLabel = new JLabel("Distanza passeggiata: ");
 
     String[] maskOptions = {"Mai", "Al chiuso", "Sempre"};
-    String[] parkOptions = {"Si","No"};
+    //String[] parkOptions = {"Si","No"};
     JComboBox<String> maskCombo = new JComboBox<>(maskOptions);
-    JComboBox<String> parkCombo = new JComboBox<>(parkOptions);
+    JCheckBox nonEssentialBox = new JCheckBox("Aperti", true);
+    JCheckBox parkBox = new JCheckBox("Aperti", true);
     JSlider densitySlider =  new JSlider (JSlider.HORIZONTAL, 0, 100, 100);
     JTextField walkInput = new JTextField("10");
     JButton sendButton = new JButton("Emana decreto");
@@ -53,13 +57,15 @@ public class GovGui {
         decreeLayout.setHorizontalGroup(decreeLayout.createSequentialGroup()
                 .addGroup(decreeLayout.createParallelGroup(LEADING)
                         .addComponent(maskLabel)
+                        .addComponent(nonEssentialLabel)
                         .addComponent(parkLabel)
                         .addComponent(densityLabel)
                         .addComponent(walkLabel)
                 )
                 .addGroup(decreeLayout.createParallelGroup(LEADING)
                         .addComponent(maskCombo)
-                        .addComponent(parkCombo)
+                        .addComponent(nonEssentialBox)
+                        .addComponent(parkBox)
                         .addComponent(densitySlider)
                         .addComponent(walkInput)
                 )
@@ -71,8 +77,12 @@ public class GovGui {
                         .addComponent(maskCombo)
                 )
                 .addGroup(decreeLayout.createParallelGroup(CENTER)
+                        .addComponent(nonEssentialLabel)
+                        .addComponent(nonEssentialBox)
+                )
+                .addGroup(decreeLayout.createParallelGroup(CENTER)
                         .addComponent(parkLabel)
-                        .addComponent(parkCombo)
+                        .addComponent(parkBox)
                 )
                 .addGroup(decreeLayout.createParallelGroup(CENTER)
                         .addComponent(densityLabel)
@@ -101,7 +111,8 @@ public class GovGui {
     private GuiEvent createEvent() {
         GuiEvent e = new GuiEvent(this,0);
         e.addParameter(maskCombo.getSelectedIndex());
-        e.addParameter(parkCombo.getSelectedIndex());
+        e.addParameter(nonEssentialBox.isSelected());
+        e.addParameter(parkBox.isSelected());
         e.addParameter((double) densitySlider.getValue()/100);
         try {
             e.addParameter(Integer.parseInt(walkInput.getText()));

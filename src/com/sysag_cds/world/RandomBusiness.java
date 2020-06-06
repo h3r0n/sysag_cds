@@ -8,7 +8,7 @@ import java.util.stream.IntStream;
  * Restituisce una categoria casuale di Business in base ad una distribuzione di probabilità specificata.
  */
 public class RandomBusiness {
-    private final String[] categoryStrings = new String[]{"SuperMarket", "Hospital", "Park"};
+    private final String[] categoryStrings = new String[]{"SuperMarket", "Hospital", "Park", "Essential", "NonEssential"};
     EnumeratedIntegerDistribution distribution;
 
     public RandomBusiness(double[] p) {

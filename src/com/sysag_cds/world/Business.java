@@ -115,6 +115,8 @@ public class Business extends Agent {
                                     currentDecree.setDensity( Double.parseDouble((String)p.getValue()));
                                 if (p.getName().equals("parkOpen"))
                                     currentDecree.setParkOpen( Boolean.parseBoolean((String)p.getValue()));
+                                if (p.getName().equals("nonEssentialOpen"))
+                                    currentDecree.setNonEssentialOpen(Boolean.parseBoolean((String)p.getValue()));
 
                             }
                             manageDecree(currentDecree);
@@ -131,6 +133,8 @@ public class Business extends Agent {
     void manageDecree(Decree d) {
         boolean open = d.getDensity() > position.getDensity();
         if (category.equals("Park") && !d.getParkOpen())
+            open = false;
+        if (category.equals("nonEssential") && !d.getNonEssentialOpen())
             open = false;
         setOpen(open);
     }
