@@ -87,7 +87,8 @@ public class Government extends GuiAgent {
         d.setNonEssentialOpen((boolean) ev.getParameter(1));
         d.setParkOpen((boolean) ev.getParameter(2));
         d.setDensity((double) ev.getParameter(3));
-        d.setWalkDistance((int) ev.getParameter(4));
+        d.setMaxTravel((int) ev.getParameter(4));
+        d.setWalkDistance((int) ev.getParameter(5));
         //System.out.println("Obbligo Mascherina= "+d.getMaskRequired().toString()+" Parchi Aperti= "+d.getParkOpen()+" Distanziamento= "+d.getDensity()+" Distanza Passeggiata="+d.getWalkDistance()+" ");
         updateDecree(d);
     }

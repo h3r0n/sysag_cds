@@ -13,7 +13,7 @@ public class Decree {
 
     private int decreeNumber = 1;
     private int WalkDistance = 10;
-    private int maxTravel = 10;
+    private int maxTravel = 100;
     private boolean parkOpen = true;
     private boolean nonEssentialOpen = true;
     private LAW maskRequired = LAW.NEVER;

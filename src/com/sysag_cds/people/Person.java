@@ -639,7 +639,10 @@ public class Person extends TaskAgent {
                     minDist = dist;
                 }
             }
+            if (minDist>currentDecree.getMaxTravel())
+                closest=null;
         }
+
         return closest;
     }
 
@@ -689,29 +692,42 @@ public class Person extends TaskAgent {
     }
 
     void goEvent(Building eventSetting) {
-        SequentialBehaviour task = new SequentialBehaviour();
-
-        task.addSubBehaviour(new OneShotBehaviour() {
-            @Override
-            public void action() {
-                if (Simulation.debug)
-                    System.out.println(getLocalName()+" is going to the Event.");
-            }
-        });
-        task.addSubBehaviour(new TravelTask(this, eventSetting));
-        task.addSubBehaviour(new WaitingTask(this, Simulation.tick * stayEventTicks));
-        task.addSubBehaviour(new OneShotBehaviour() {
-            @Override
-            public void action() {
-                goingPark = false;
-                if (Simulation.debug)
-                    System.out.println(getLocalName()+" is coming back home from the Event.");
-            }
-        });
-        task.addSubBehaviour(new TravelTask(this, home));
-        scheduleTask(task);
-        if (Simulation.debug)
-            System.out.println(getLocalName()+" wants to go to the Event.");
+        if (!goingEvent) {
+            goingEvent = true;
+            SequentialBehaviour task = new SequentialBehaviour();
+            task.addSubBehaviour(new OneShotBehaviour() {
+                @Override
+                public void action() {
+                    if (World.getInstance().getDistance(home, eventSetting) <= currentDecree.getMaxTravel()) {
+                        task.addSubBehaviour(new OneShotBehaviour() {
+                            @Override
+                            public void action() {
+                                if (Simulation.debug)
+                                    System.out.println(getLocalName() + " is going to the Event.");
+                            }
+                        });
+                        task.addSubBehaviour(new TravelTask(myAgent, eventSetting));
+                        task.addSubBehaviour(new WaitingTask(myAgent, Simulation.tick * stayEventTicks));
+                        task.addSubBehaviour(new OneShotBehaviour() {
+                            @Override
+                            public void action() {
+                                goingEvent = false;
+                                if (Simulation.debug)
+                                    System.out.println(getLocalName() + " is coming back home from the Event.");
+                            }
+                        });
+                        task.addSubBehaviour(new TravelTask(myAgent, home));
+                    } else {
+                        goingEvent = false;
+                        if (Simulation.debug)
+                            System.out.println(getLocalName() + " cannot go to the Event.");
+                    }
+                }
+            });
+            scheduleTask(task);
+            if (Simulation.debug)
+                System.out.println(getLocalName() + " wants to go to the Event.");
+        }
     }
 
     boolean randomGoEvent() {
