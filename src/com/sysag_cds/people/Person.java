@@ -54,7 +54,7 @@ public class Person extends TaskAgent {
     static double illProbability = 0.01;     // probabilità giornaliera di necessitare dell'ospedale
     static double diseaseIllProbability = 0.05; // probabilità giornaliera di necessitare dell'ospedale se ammalati
     static double deathProbability = 0.05;  // probabilità giornaliera di morire con la malattia e ricovero
-    static double outDeathProbability = 0.7;  // probabilità giornaliera di morire con la malattia e degenza negata in ospedale
+    static double outDeathProbability = 0.8;  // probabilità giornaliera di morire con la malattia e degenza negata in ospedale
 
     // status
     int food = maxfood;  // riserva beni di prima necessità
@@ -703,7 +703,7 @@ public class Person extends TaskAgent {
                                 if (p.getName().equals("Density"))
                                     buil.setDensity(Double.parseDouble((String) p.getValue()));
                             }
-                            if (randomGoEvent())
+                            if (randomGoEvent() && currentDecree.getEventOpen())
                                 goEvent(buil);
                         }
                     }
@@ -880,6 +880,8 @@ public class Person extends TaskAgent {
                                     currentDecree.setMaskRequired( currentDecree.parseString((String) p.getValue()));
                                 if (p.getName().equals("density"))
                                     currentDecree.setDensity( Double.parseDouble((String)p.getValue()));
+                                if (p.getName().equals("eventOpen"))
+                                    currentDecree.setEventOpen(Boolean.parseBoolean((String)p.getValue()));
                             }
                         }
                     }

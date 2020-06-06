@@ -29,22 +29,17 @@ public class StatGui {
     JPanel chartPanel;
 
     StatGui() {
+        datax.add(0.0); datatp.add(0); datacp.add(0); datar.add(0); datad.add(0); datap.add(0);
         buildGui();
+        datax.remove(0); datatp.remove(0); datacp.remove(0); datar.remove(0); datad.remove(0); datap.remove(0);
     }
 
     private void buildGui() {
-        datax.add(0.0);
-        datatp.add(0);
-        datacp.add(0);
-        datar.add(0);
-        datad.add(0);
-        datap.add(0);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         chart = new XYChartBuilder().width(600).height(400).title("Andamento contagio").xAxisTitle("Giorni").yAxisTitle("Casi").build();
         chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNW);
         chart.getStyler().setChartBackgroundColor(new Color(247,246,242));
-        //chart.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Area);
 
         chart.addSeries("Totale positivi", datax, datatp);
         chart.getSeriesMap().get("Totale positivi").setLineColor(new Color(239,78,99));
@@ -58,8 +53,8 @@ public class StatGui {
         chart.addSeries("Morti", datax, datad);
         chart.getSeriesMap().get("Morti").setLineColor(new Color(10,10,10));
 
-        chart.addSeries("Posti liberi", datax, datap);
-        chart.getSeriesMap().get("Posti liberi").setLineColor(new Color(103, 173, 223));
+        chart.addSeries("Posti letto liberi", datax, datap);
+        chart.getSeriesMap().get("Posti letto liberi").setLineColor(new Color(103, 173, 223));
 
         for (XYSeries s : chart.getSeriesMap().values())
             s.setMarker(SeriesMarkers.NONE);
@@ -86,7 +81,7 @@ public class StatGui {
         chart.updateXYSeries("Attualmente positivi", datax, datacp,null);
         chart.updateXYSeries("Guariti", datax, datar,null);
         chart.updateXYSeries("Morti", datax, datad,null);
-        chart.updateXYSeries("Posti liberi", datax, datap,null);
+        chart.updateXYSeries("Posti letto liberi", datax, datap,null);
         chartPanel.revalidate();
         chartPanel.repaint();
     }

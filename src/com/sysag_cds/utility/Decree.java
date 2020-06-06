@@ -16,8 +16,17 @@ public class Decree {
     private int maxTravel = 100;
     private boolean parkOpen = true;
     private boolean nonEssentialOpen = true;
+    private boolean eventOpen = true;
     private LAW maskRequired = LAW.NEVER;
     private double density = 1;
+
+    public boolean getEventOpen() {
+        return eventOpen;
+    }
+
+    public void setEventOpen(boolean eventOpen) {
+        this.eventOpen = eventOpen;
+    }
 
     public int getDecreeNumber() {
         return decreeNumber;

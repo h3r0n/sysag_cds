@@ -15,6 +15,7 @@ public class GovGui {
     JLabel maskLabel = new JLabel("Obbligo DPI: ");
     JLabel nonEssentialLabel = new JLabel("Attività non essenziali:");
     JLabel parkLabel = new JLabel("Parchi:");
+    JLabel eventLabel = new JLabel("Eventi pubblici:");
     JLabel densityLabel = new JLabel("Distanziamento: ");
     JLabel travelLabel = new JLabel("Limite spostamenti: ");
     JLabel walkLabel = new JLabel("Distanza passeggiata: ");
@@ -23,6 +24,7 @@ public class GovGui {
     JComboBox<String> maskCombo = new JComboBox<>(maskOptions);
     JCheckBox nonEssentialBox = new JCheckBox("Aperti", true);
     JCheckBox parkBox = new JCheckBox("Aperti", true);
+    JCheckBox eventBox = new JCheckBox("Consentiti", true);
     JSlider densitySlider =  new JSlider (JSlider.HORIZONTAL, 0, 100, 100);
     JTextField travelInput = new JTextField("100");
     JTextField walkInput = new JTextField("10");
@@ -60,6 +62,7 @@ public class GovGui {
                         .addComponent(maskLabel)
                         .addComponent(nonEssentialLabel)
                         .addComponent(parkLabel)
+                        .addComponent(eventLabel)
                         .addComponent(densityLabel)
                         .addComponent(travelLabel)
                         .addComponent(walkLabel)
@@ -68,6 +71,7 @@ public class GovGui {
                         .addComponent(maskCombo)
                         .addComponent(nonEssentialBox)
                         .addComponent(parkBox)
+                        .addComponent(eventBox)
                         .addComponent(densitySlider)
                         .addComponent(travelInput)
                         .addComponent(walkInput)
@@ -86,6 +90,10 @@ public class GovGui {
                 .addGroup(decreeLayout.createParallelGroup(CENTER)
                         .addComponent(parkLabel)
                         .addComponent(parkBox)
+                )
+                .addGroup(decreeLayout.createParallelGroup(CENTER)
+                        .addComponent(eventLabel)
+                        .addComponent(eventBox)
                 )
                 .addGroup(decreeLayout.createParallelGroup(CENTER)
                         .addComponent(densityLabel)
@@ -120,6 +128,7 @@ public class GovGui {
         e.addParameter(maskCombo.getSelectedIndex());
         e.addParameter(nonEssentialBox.isSelected());
         e.addParameter(parkBox.isSelected());
+        e.addParameter(eventBox.isSelected());
         e.addParameter((double) densitySlider.getValue()/100);
         try {
             e.addParameter(Integer.parseInt(travelInput.getText()));
