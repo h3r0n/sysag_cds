@@ -25,6 +25,7 @@ public class StatGui {
     List<Integer> datacp = new LinkedList<>();
     List<Integer> datar = new LinkedList<>();
     List<Integer> datad = new LinkedList<>();
+    List<Integer> datap = new LinkedList<>();
     JPanel chartPanel;
 
     StatGui() {
@@ -37,6 +38,7 @@ public class StatGui {
         datacp.add(0);
         datar.add(0);
         datad.add(0);
+        datap.add(0);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         chart = new XYChartBuilder().width(600).height(400).title("Andamento contagio").xAxisTitle("Giorni").yAxisTitle("Casi").build();
@@ -56,6 +58,9 @@ public class StatGui {
         chart.addSeries("Morti", datax, datad);
         chart.getSeriesMap().get("Morti").setLineColor(new Color(10,10,10));
 
+        chart.addSeries("Posti liberi", datax, datap);
+        chart.getSeriesMap().get("Posti liberi").setLineColor(new Color(103, 173, 223));
+
         for (XYSeries s : chart.getSeriesMap().values())
             s.setMarker(SeriesMarkers.NONE);
 
@@ -66,12 +71,13 @@ public class StatGui {
         frame.setVisible(true);
     }
 
-    void addData(double x, int tp, int cp, int r, int d) {
+    void addData(double x, int tp, int cp, int r, int d, int p) {
         datax.add(x);
         datatp.add(tp);
         datacp.add(cp);
         datar.add(r);
         datad.add(d);
+        datap.add(p);
         update();
     }
 
@@ -80,6 +86,7 @@ public class StatGui {
         chart.updateXYSeries("Attualmente positivi", datax, datacp,null);
         chart.updateXYSeries("Guariti", datax, datar,null);
         chart.updateXYSeries("Morti", datax, datad,null);
+        chart.updateXYSeries("Posti liberi", datax, datap,null);
         chartPanel.revalidate();
         chartPanel.repaint();
     }

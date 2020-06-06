@@ -18,9 +18,10 @@ public class HealthCare extends Agent {
         beds = Integer.parseInt((String)args[0]);
 
         registerService();
+        addBehaviour(new ManageBeds());
     }
 
-    class manageBeds extends CyclicBehaviour {
+    class ManageBeds extends CyclicBehaviour {
         @Override
         public void action() {
             ACLMessage msg = myAgent.receive();

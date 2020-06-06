@@ -22,10 +22,13 @@ import jade.wrapper.StaleProxyException;
  *     [6] probabilità di creare lavoratori
  *     [7] numero di Building per lato, considerando che la mappa è un quadrato. Deve essere >= 2
  *     [8] numero di Business
+ *     [9] numero di posti letto
  *
- * Esempio: -agents simulation:com.sysag_cds.superagents.Simulation(1,.5,0,.5,0,0.1,2)
- *     Crea 1 agente Person, con il 50% di probabilità di essere SUSCEPTIBLE e il 50% di essere INFECTIOUS
- *     Crea poi una mappa con 4 edifici
+ * Esempio: -agents simulation:com.sysag_cds.superagents.Simulation(100,.9,0,.1,0,.2,.5,15,20,5)
+ *     Crea 100 Person, con il 90% di probabilità di essere SUSCEPTIBLE e il 10% di essere INFECTIOUS
+ *     hanno il 20% di probabilità di essere incoscienti e il 50% di essere lavoratori
+ *     Crea poi una mappa con 225 edifici, in cui risiedono 20 Business
+ *     Tra tutti gli ospedali i posti letto sono 5
  */
 public class Simulation extends Agent {
     public static int tick = 100;
@@ -38,12 +41,13 @@ public class Simulation extends Agent {
     private int mapSize;
     private double naughtyProb;
     private double workerProb;
+    private int beds;
 
 
     protected void setup() {
 
-        startAgent("Statistics", "com.sysag_cds.superagents.Statistics");  // avvia superagente Statistics
-        startAgent("Government", "com.sysag_cds.superagents.Government");  // avvia superagente Government
+        startAgent("Statistics", "com.sysag_cds.superagents.Statistics", null);  // avvia superagente Statistics
+        startAgent("Government", "com.sysag_cds.superagents.Government", null);  // avvia superagente Government
 
         readArgs(getArguments());   // leggi argomenti
         World.getInstance(mapSize); // inizializza mappa
@@ -81,7 +85,8 @@ public class Simulation extends Agent {
         for (int i = 0; i < nPeople; i++)
             pf.create();
 
-        startAgent("EventPlanner", "com.sysag_cds.superagents.EventPlanner");  // avvia superagente EventPlanner
+        startAgent("HealthCare", "com.sysag_cds.superagents.HealthCare", new Object[]{Integer.toString(beds)});  // avvia superagente HealthCare
+        startAgent("EventPlanner", "com.sysag_cds.superagents.EventPlanner",null);  // avvia superagente EventPlanner
     }
 
     private void readArgs(Object[] args) {
@@ -94,13 +99,14 @@ public class Simulation extends Agent {
         workerProb = Double.parseDouble((String) args[6]);
         mapSize = Integer.parseInt((String) args[7]);
         nBusiness = Integer.parseInt((String) args[8]);
+        beds = Integer.parseInt((String) args[9]);
     }
 
-    private void startAgent(String nickname, String classname) {
+    private void startAgent(String nickname, String classname, Object[] args) {
         ContainerController c = getContainerController();
         try {
             AgentController a = c.createNewAgent(
-                    nickname, classname, null
+                    nickname, classname, args
             );
             a.start();
         } catch (StaleProxyException e) {
