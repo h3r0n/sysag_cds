@@ -38,19 +38,19 @@ public class Person extends TaskAgent {
     }
 
     // costanti
-    static int seirDelta = 420;   // tempo di incubazione (da EXPOSED a INFECTIOUS)
-    static int seirGamma = 840;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
+    static int seirDelta = 7*Simulation.day;   // tempo di incubazione (da EXPOSED a INFECTIOUS)
+    static int seirGamma = 14*Simulation.day;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
     static int walkingTime = 1; // tempo per percorrere una strada
-    static int maxfood = 120;    // dimensione riserva beni di prima necessità
+    static int maxfood = 2*Simulation.day;    // dimensione riserva beni di prima necessità
     static int deltaFoodTicks = 1; // tempo di riduzione beni di prima necessità
     static int staySupermarketTicks = 10; // tempo di permanenza al supermercato
-    static int deltaIllTicks = 60; // tempo di insorgenza di malattia
-    static int stayHospitalTicks = 30; // tempo di degenza in ospedale
-    static int walkingTicks = 60;    // tempo tra passeggiate
-    static int parkTicks = 120;
-    static int stayParkTicks = 30;
-    static double deathProbability = 0.20;
-    static double illProbability = 0.1;
+    static int deltaIllTicks = Simulation.day; // tempo di possibile insorgenza di malattia
+    static int stayHospitalTicks = (int)(.5*Simulation.day); // tempo di degenza in ospedale
+    static int walkingTicks = Simulation.day;    // tempo tra passeggiate
+    static int parkTicks = 2*Simulation.day;    // tempo tra visite al parco
+    static int stayParkTicks = (int)(.5*Simulation.day);    // tempo di permanenza al parco
+    static double deathProbability = 0.20;  // probabilità di morire al termine della malattia
+    static double illProbability = 0.1;     // probabilità giornaliera di necessitare un ricovero
 
     // status
     int food = maxfood;  // riserva beni di prima necessità
@@ -76,7 +76,8 @@ public class Person extends TaskAgent {
         if (Simulation.debug)
             System.out.println(getLocalName() + " started.");
 
-        statistics = findServiceAgent("Statistics");
+        //statistics = findServiceAgent("Statistics");
+        statistics = new AID("Statistics", AID.ISLOCALNAME);
 
         // inizializzazione agente
         Object[] args = this.getArguments();
@@ -126,7 +127,8 @@ public class Person extends TaskAgent {
                                 task.addSubBehaviour(new OneShotBehaviour() {
                                     @Override
                                     public void action() {
-                                        System.out.println(getLocalName()+" is going to the Supermarket.");
+                                        if (Simulation.debug)
+                                            System.out.println(getLocalName()+" is going to the Supermarket.");
                                     }
                                 });
                             task.addSubBehaviour(new TravelTask(myAgent, destination));
@@ -164,11 +166,12 @@ public class Person extends TaskAgent {
                     task.addSubBehaviour(new OneShotBehaviour() {
                         @Override
                         public void action() {
-                            if (currentDecree.getWalkDistance() == 0 && !naughty && Simulation.debug)
-                                System.out.println(getLocalName() + " cannot go for a walk.");
-                            else
-                                System.out.println(getLocalName() + " is going for a walk.");
-
+                            if (Simulation.debug) {
+                                if (currentDecree.getWalkDistance() == 0 && !naughty)
+                                    System.out.println(getLocalName() + " cannot go for a walk.");
+                                else
+                                    System.out.println(getLocalName() + " is going for a walk.");
+                            }
                             if (currentDecree.getWalkDistance() > 0 && !naughty)
                                 task.addSubBehaviour(new WalkingTask(myAgent, currentDecree.getWalkDistance()));
                             if (naughty)
@@ -207,7 +210,8 @@ public class Person extends TaskAgent {
                                 task.addSubBehaviour(new OneShotBehaviour() {
                                     @Override
                                     public void action() {
-                                        System.out.println(getLocalName()+" is going to the Hospital.");
+                                        if (Simulation.debug)
+                                            System.out.println(getLocalName()+" is going to the Hospital.");
                                     }
                                 });
                                 task.addSubBehaviour(new TravelTask(myAgent, destination));
@@ -248,7 +252,8 @@ public class Person extends TaskAgent {
                             task.addSubBehaviour(new OneShotBehaviour() {
                                 @Override
                                 public void action() {
-                                    System.out.println(getLocalName()+" is going to the Park.");
+                                    if (Simulation.debug)
+                                        System.out.println(getLocalName()+" is going to the Park.");
                                 }
                             });
                             task.addSubBehaviour(new TravelTask(myAgent, destination));
@@ -563,7 +568,8 @@ public class Person extends TaskAgent {
                             @Override
                             protected void onWake() {
                                 setLocation(start);
-                                System.out.println(this.myAgent.getLocalName()+" comes back home from a walk.");
+                                if (Simulation.debug)
+                                    System.out.println(this.myAgent.getLocalName()+" comes back home from a walk.");
                             }
                         });
                     }

@@ -33,7 +33,7 @@ public class Statistics extends Agent {
                 time+=updateTicks;
                 if (Simulation.debug)
                     printStatistics();
-                gui.addData((double) time/60,infected,currentInfected,recovered,dead);
+                gui.addData((double) time/Simulation.day,infected,currentInfected,recovered,dead);
             }
         });
     }

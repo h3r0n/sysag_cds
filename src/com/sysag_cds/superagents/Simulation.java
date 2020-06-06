@@ -29,6 +29,7 @@ import jade.wrapper.StaleProxyException;
  */
 public class Simulation extends Agent {
     public static int tick = 100;
+    public static int day = 60;
     public static boolean debug = true;
 
     private int nPeople;
