@@ -70,17 +70,14 @@ public class Person extends TaskAgent {
     List<SubscriptionInitiator> subscriptions = new LinkedList<>(); // lista sottoscrizioni (potenziali contagi)
 
     // messaggi
-    AID statistics;    // agente fornitore del servizio Statistics
     Decree currentDecree = new Decree();
+    int beds = 100;
 
     @Override
     protected void setup() {
 
         if (Simulation.debug)
             System.out.println(getLocalName() + " started.");
-
-        //statistics = findServiceAgent("Statistics");
-        statistics = new AID("Statistics", AID.ISLOCALNAME);
 
         // inizializzazione agente
         Object[] args = this.getArguments();
@@ -758,7 +755,7 @@ public class Person extends TaskAgent {
 
     protected void updateStatistics(String s) {
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-        msg.addReceiver(statistics);
+        msg.addReceiver(new AID("Statistics", AID.ISLOCALNAME));
         msg.setContent(s);
         send(msg);
     }
@@ -865,5 +862,52 @@ public class Person extends TaskAgent {
             }
         };
         addBehaviour(subscription);
+    }
+
+    // ------------------------------------
+    //  Posti letto
+    // ------------------------------------
+
+    /**
+     * Notifica aggiornamenti relativi alla disponibilità di posti letto in ospedale
+     */
+    public void subscribeHealthCare() {
+        DFAgentDescription template = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("HealthCare");
+        template.addServices(sd);
+
+        SubscriptionInitiator subscription = new SubscriptionInitiator(
+                this, DFService.createSubscriptionMessage(this, getDefaultDF(), template, null)) {
+            protected void handleInform(ACLMessage inform) {
+                try {
+                    if (Simulation.debug)
+                        System.out.println(getLocalName()+" received a new update about Hospital beds");
+                    DFAgentDescription[] dfds = DFService.decodeNotification(inform.getContent());
+                    for (DFAgentDescription dfd : dfds) {
+                        Iterator allServices = dfd.getAllServices();
+                        while (allServices.hasNext()) {
+                            ServiceDescription sd = (ServiceDescription) allServices.next();
+                            Iterator allProperties = sd.getAllProperties();
+                            while (allProperties.hasNext()) {
+                                Property p = (Property) allProperties.next();
+                                if (p.getName().equals("beds"))
+                                    beds = Integer.parseInt((String)p.getValue());
+                            }
+                        }
+                    }
+                } catch (FIPAException fe) {
+                    fe.printStackTrace();
+                }
+            }
+        };
+        addBehaviour(subscription);
+    }
+
+    void updateBeds(boolean b) {
+        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+        msg.addReceiver(new AID("HealthCare", AID.ISLOCALNAME));
+        msg.setContent(Boolean.toString(b));
+        send(msg);
     }
 }
