@@ -38,27 +38,34 @@ public class Person extends TaskAgent {
     }
 
     // costanti
-    static int seirDelta = 420;   // tempo di incubazione (da EXPOSED a INFECTIOUS)
-    static int seirGamma = 840;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
+    int seirDelta = 7*Simulation.day;   // tempo di incubazione (da EXPOSED a INFECTIOUS)
+    int seirGamma = 14*Simulation.day;   // tempo di guarigione (da INFECTIOUS a RECOVERED)
     static int walkingTime = 1; // tempo per percorrere una strada
-    static int maxfood = 120;    // dimensione riserva beni di prima necessità
+    int maxfood = 2*Simulation.day;    // dimensione riserva beni di prima necessità
     static int deltaFoodTicks = 1; // tempo di riduzione beni di prima necessità
-    static int staySupermarketTicks = 10; // tempo di permanenza al supermercato
-    static int deltaIllTicks = 60; // tempo di insorgenza di malattia
-    static int stayHospitalTicks = 30; // tempo di degenza in ospedale
-    static int walkingTicks = 60;    // tempo tra passeggiate
-    static int parkTicks = 120;
-    static int stayParkTicks = 30;
-    static double deathProbability = 0.20;
-    static double illProbability = 0.1;
+    int staySupermarketTicks = 10; // tempo di permanenza al supermercato
+    static int deltaIllTicks = Simulation.day; // tempo di possibile insorgenza di malattia
+    int stayHospitalTicks = 2*Simulation.day; // tempo di degenza in ospedale
+    int walkingTicks = Simulation.day;    // tempo tra passeggiate
+    int parkTicks = 2*Simulation.day;    // tempo tra visite al parco
+    int stayParkTicks = (int)(.5*Simulation.day);    // tempo di permanenza al parco
+    static double eventProbability = 0.2;   // probabilità di accettare un invito ad un evento
+    int stayEventTicks = (int)(.5*Simulation.day);    // tempo di permanenza ad un evento
+    static double illProbability = 0.01;     // probabilità giornaliera di necessitare dell'ospedale
+    static double diseaseIllProbability = 0.05; // probabilità giornaliera di necessitare dell'ospedale se ammalati
+    static double deathProbability = 0.05;  // probabilità giornaliera di morire con la malattia e ricovero
+    static double outDeathProbability = 0.8;  // probabilità giornaliera di morire con la malattia e degenza negata in ospedale
 
     // status
     int food = maxfood;  // riserva beni di prima necessità
     boolean goingSuperMarket = false;
     boolean goingHospital = false;
+    boolean noHospital = false; // negata degenza in ospedale
+    boolean bedTaken = false; // assegnato un letto in ospedale
     boolean ill = false;
     boolean goingPark = false;
     boolean goingWalk = false;
+    boolean goingEvent = false;
     boolean naughty = false; // mancato rispetto dei decreti
     static int walkingDistance = 10; // distanza massima passeggiata (naugthy)
     protected SEIR diseaseStatus = SEIR.SUSCEPTIBLE;    // stato di avanzamento della malattia
@@ -67,16 +74,16 @@ public class Person extends TaskAgent {
     List<SubscriptionInitiator> subscriptions = new LinkedList<>(); // lista sottoscrizioni (potenziali contagi)
 
     // messaggi
-    AID statistics;    // agente fornitore del servizio Statistics
     Decree currentDecree = new Decree();
+    int beds = 100;
 
     @Override
     protected void setup() {
 
+        randomize();
+
         if (Simulation.debug)
             System.out.println(getLocalName() + " started.");
-
-        statistics = findServiceAgent("Statistics");
 
         // inizializzazione agente
         Object[] args = this.getArguments();
@@ -109,6 +116,8 @@ public class Person extends TaskAgent {
         }
 
         subscribeDecrees();
+        subscribeHealthCare();
+        subscribeEvents();
 
         // supermercato
         addBehaviour(new TickerBehaviour(this, Simulation.tick * deltaFoodTicks) {
@@ -126,7 +135,8 @@ public class Person extends TaskAgent {
                                 task.addSubBehaviour(new OneShotBehaviour() {
                                     @Override
                                     public void action() {
-                                        System.out.println(getLocalName()+" is going to the Supermarket.");
+                                        if (Simulation.debug)
+                                            System.out.println(getLocalName()+" is going to the Supermarket.");
                                     }
                                 });
                             task.addSubBehaviour(new TravelTask(myAgent, destination));
@@ -164,11 +174,12 @@ public class Person extends TaskAgent {
                     task.addSubBehaviour(new OneShotBehaviour() {
                         @Override
                         public void action() {
-                            if (currentDecree.getWalkDistance() == 0 && !naughty && Simulation.debug)
-                                System.out.println(getLocalName() + " cannot go for a walk.");
-                            else
-                                System.out.println(getLocalName() + " is going for a walk.");
-
+                            if (Simulation.debug) {
+                                if (currentDecree.getWalkDistance() == 0 && !naughty)
+                                    System.out.println(getLocalName() + " cannot go for a walk.");
+                                else
+                                    System.out.println(getLocalName() + " is going for a walk.");
+                            }
                             if (currentDecree.getWalkDistance() > 0 && !naughty)
                                 task.addSubBehaviour(new WalkingTask(myAgent, currentDecree.getWalkDistance()));
                             if (naughty)
@@ -203,11 +214,15 @@ public class Person extends TaskAgent {
                         @Override
                         public void action() {
                             Building destination = findNearestBusiness("Hospital");
-                            if (destination!=null) {
+                            if (destination!=null && beds>0) {
+                                noHospital = false;
+                                bedTaken = true;
+                                updateBeds(true);
                                 task.addSubBehaviour(new OneShotBehaviour() {
                                     @Override
                                     public void action() {
-                                        System.out.println(getLocalName()+" is going to the Hospital.");
+                                        if (Simulation.debug)
+                                            System.out.println(getLocalName()+" is going to the Hospital.");
                                     }
                                 });
                                 task.addSubBehaviour(new TravelTask(myAgent, destination));
@@ -217,12 +232,15 @@ public class Person extends TaskAgent {
                                     public void action() {
                                         ill = false;
                                         goingHospital = false;
+                                        bedTaken = false;
+                                        updateBeds(false);
                                         if (Simulation.debug)
                                             System.out.println(getLocalName()+" is coming back home from the Hospital.");
                                     }
                                 });
                                 task.addSubBehaviour(new TravelTask(myAgent, home));
                             } else {
+                                noHospital = true;
                                 goingHospital = false;
                                 if (Simulation.debug)
                                     System.out.println(getLocalName()+" cannot go to the Hospital.");
@@ -230,6 +248,19 @@ public class Person extends TaskAgent {
                         }
                     });
                     scheduleTask(task);
+                }
+            }
+        });
+
+        // morte da covid: si può morire se si è infetti(isInfectious) e con sintomi(ill)
+        addBehaviour(new TickerBehaviour(this, Simulation.tick * deltaIllTicks) {
+            @Override
+            protected void onTick() {
+                if (ill && isInfectious() && randomDeath()) {
+                    if (bedTaken)
+                        updateBeds(false);
+                    updateStatistics("Dead"); //Manda messaggio all'agente Statistics
+                    myAgent.doDelete();
                 }
             }
         });
@@ -248,7 +279,8 @@ public class Person extends TaskAgent {
                             task.addSubBehaviour(new OneShotBehaviour() {
                                 @Override
                                 public void action() {
-                                    System.out.println(getLocalName()+" is going to the Park.");
+                                    if (Simulation.debug)
+                                        System.out.println(getLocalName()+" is going to the Park.");
                                 }
                             });
                             task.addSubBehaviour(new TravelTask(myAgent, destination));
@@ -345,12 +377,7 @@ public class Person extends TaskAgent {
         if (Simulation.debug)
             System.out.println(getLocalName() + " has recovered");
 
-        if (randomDeath()) {
-            updateStatistics("Dead"); //Manda messaggio all'agente Statistics
-            this.doDelete();
-        } else {
-            updateStatistics("Recovered"); //Manda messaggio all'agente Statistics
-        }
+        updateStatistics("Recovered");
     }
 
     public boolean isRecovered() {
@@ -358,11 +385,18 @@ public class Person extends TaskAgent {
     }
 
     boolean randomDeath() {
-        return BooleanProbability.getBoolean(deathProbability);
+        if (noHospital) {
+            return BooleanProbability.getBoolean(outDeathProbability);
+        } else {
+            return BooleanProbability.getBoolean(deathProbability);
+        }
     }
 
     boolean randomIllness() {
-        return BooleanProbability.getBoolean(illProbability);
+        if (isInfectious())
+            return BooleanProbability.getBoolean(diseaseIllProbability);
+        else
+            return BooleanProbability.getBoolean(illProbability);
     }
 
     // ------------------------------------
@@ -563,7 +597,8 @@ public class Person extends TaskAgent {
                             @Override
                             protected void onWake() {
                                 setLocation(start);
-                                System.out.println(this.myAgent.getLocalName()+" comes back home from a walk.");
+                                if (Simulation.debug)
+                                    System.out.println(this.myAgent.getLocalName()+" comes back home from a walk.");
                             }
                         });
                     }
@@ -630,8 +665,99 @@ public class Person extends TaskAgent {
                     minDist = dist;
                 }
             }
+            if (minDist>currentDecree.getMaxTravel())
+                closest=null;
         }
+
         return closest;
+    }
+
+    // ------------------------------------
+    //  Eventi
+    // ------------------------------------
+
+    /**
+     * Notifica inviti ad eventi
+     */
+    public void subscribeEvents() {
+        DFAgentDescription template = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("Event");
+        template.addServices(sd);
+
+        SubscriptionInitiator subscription = new SubscriptionInitiator(
+                this, DFService.createSubscriptionMessage(this, getDefaultDF(), template, null)) {
+            protected void handleInform(ACLMessage inform) {
+                try {
+                    if (Simulation.debug)
+                        System.out.println(getLocalName()+" received a new event invitation.");
+                    DFAgentDescription[] dfds = DFService.decodeNotification(inform.getContent());
+                    for (DFAgentDescription dfd : dfds) {
+                        Iterator allServices = dfd.getAllServices();
+                        while (allServices.hasNext()) {
+                            ServiceDescription sd = (ServiceDescription) allServices.next();
+                            Iterator allProperties = sd.getAllProperties();
+                            Building buil=new Building("test");
+                            while (allProperties.hasNext()) {
+                                Property p = (Property) allProperties.next();
+                                if (p.getName().equals("Location"))
+                                    buil.setLocation((String) p.getValue());
+                                if (p.getName().equals("Density"))
+                                    buil.setDensity(Double.parseDouble((String) p.getValue()));
+                            }
+                            if (randomGoEvent() && currentDecree.getEventOpen())
+                                goEvent(buil);
+                        }
+                    }
+                } catch (FIPAException fe) {
+                    fe.printStackTrace();
+                }
+            }
+        };
+        addBehaviour(subscription);
+    }
+
+    void goEvent(Building eventSetting) {
+        if (!goingEvent) {
+            goingEvent = true;
+            SequentialBehaviour task = new SequentialBehaviour();
+            task.addSubBehaviour(new OneShotBehaviour() {
+                @Override
+                public void action() {
+                    if (World.getInstance().getDistance(home, eventSetting) <= currentDecree.getMaxTravel()) {
+                        task.addSubBehaviour(new OneShotBehaviour() {
+                            @Override
+                            public void action() {
+                                if (Simulation.debug)
+                                    System.out.println(getLocalName() + " is going to the Event.");
+                            }
+                        });
+                        task.addSubBehaviour(new TravelTask(myAgent, eventSetting));
+                        task.addSubBehaviour(new WaitingTask(myAgent, Simulation.tick * stayEventTicks));
+                        task.addSubBehaviour(new OneShotBehaviour() {
+                            @Override
+                            public void action() {
+                                goingEvent = false;
+                                if (Simulation.debug)
+                                    System.out.println(getLocalName() + " is coming back home from the Event.");
+                            }
+                        });
+                        task.addSubBehaviour(new TravelTask(myAgent, home));
+                    } else {
+                        goingEvent = false;
+                        if (Simulation.debug)
+                            System.out.println(getLocalName() + " cannot go to the Event.");
+                    }
+                }
+            });
+            scheduleTask(task);
+            if (Simulation.debug)
+                System.out.println(getLocalName() + " wants to go to the Event.");
+        }
+    }
+
+    boolean randomGoEvent() {
+        return BooleanProbability.getBoolean(eventProbability);
     }
 
     // ------------------------------------
@@ -658,7 +784,7 @@ public class Person extends TaskAgent {
 
     protected void updateStatistics(String s) {
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-        msg.addReceiver(statistics);
+        msg.addReceiver(new AID("Statistics", AID.ISLOCALNAME));
         msg.setContent(s);
         send(msg);
     }
@@ -756,6 +882,8 @@ public class Person extends TaskAgent {
                                     currentDecree.setMaskRequired( currentDecree.parseString((String) p.getValue()));
                                 if (p.getName().equals("density"))
                                     currentDecree.setDensity( Double.parseDouble((String)p.getValue()));
+                                if (p.getName().equals("eventOpen"))
+                                    currentDecree.setEventOpen(Boolean.parseBoolean((String)p.getValue()));
                             }
                         }
                     }
@@ -765,5 +893,74 @@ public class Person extends TaskAgent {
             }
         };
         addBehaviour(subscription);
+    }
+
+    // ------------------------------------
+    //  Posti letto
+    // ------------------------------------
+
+    /**
+     * Notifica aggiornamenti relativi alla disponibilità di posti letto in ospedale
+     */
+    public void subscribeHealthCare() {
+        DFAgentDescription template = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("HealthCare");
+        template.addServices(sd);
+
+        SubscriptionInitiator subscription = new SubscriptionInitiator(
+                this, DFService.createSubscriptionMessage(this, getDefaultDF(), template, null)) {
+            protected void handleInform(ACLMessage inform) {
+                try {
+                    if (Simulation.debug)
+                        System.out.println(getLocalName()+" received a new update about Hospital beds");
+                    DFAgentDescription[] dfds = DFService.decodeNotification(inform.getContent());
+                    for (DFAgentDescription dfd : dfds) {
+                        Iterator allServices = dfd.getAllServices();
+                        while (allServices.hasNext()) {
+                            ServiceDescription sd = (ServiceDescription) allServices.next();
+                            Iterator allProperties = sd.getAllProperties();
+                            while (allProperties.hasNext()) {
+                                Property p = (Property) allProperties.next();
+                                if (p.getName().equals("beds"))
+                                    beds = Integer.parseInt((String)p.getValue());
+                            }
+                        }
+                    }
+                } catch (FIPAException fe) {
+                    fe.printStackTrace();
+                }
+            }
+        };
+        addBehaviour(subscription);
+    }
+
+    void updateBeds(boolean b) {
+        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+        msg.addReceiver(new AID("HealthCare", AID.ISLOCALNAME));
+        msg.setContent(Boolean.toString(b));
+        send(msg);
+    }
+
+    // ------------------------------------
+    //
+    // ------------------------------------
+
+    static int randomize(int value) {
+        double base = (double) value * .5;
+        double top = (double) value * Math.random();
+        return (int) (base+top);
+    }
+
+    void randomize() {
+        seirDelta = randomize(seirDelta);
+        seirGamma = randomize(seirGamma);
+        maxfood = randomize(maxfood);
+        staySupermarketTicks = randomize(staySupermarketTicks);
+        stayHospitalTicks = randomize(stayHospitalTicks);
+        walkingTicks = randomize(walkingTicks);
+        parkTicks = randomize(parkTicks);
+        stayParkTicks = randomize(stayParkTicks);
+        stayEventTicks = randomize(stayEventTicks);
     }
 }

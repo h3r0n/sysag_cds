@@ -13,10 +13,20 @@ public class Decree {
 
     private int decreeNumber = 1;
     private int WalkDistance = 10;
-    private int maxTravel = 10;
+    private int maxTravel = 100;
     private boolean parkOpen = true;
+    private boolean nonEssentialOpen = true;
+    private boolean eventOpen = true;
     private LAW maskRequired = LAW.NEVER;
     private double density = 1;
+
+    public boolean getEventOpen() {
+        return eventOpen;
+    }
+
+    public void setEventOpen(boolean eventOpen) {
+        this.eventOpen = eventOpen;
+    }
 
     public int getDecreeNumber() {
         return decreeNumber;
@@ -48,6 +58,14 @@ public class Decree {
 
     public void setParkOpen(boolean parkOpen) {
         this.parkOpen = parkOpen;
+    }
+
+    public boolean getNonEssentialOpen() {
+        return nonEssentialOpen;
+    }
+
+    public void setNonEssentialOpen(boolean nonEssentialOpen) {
+        this.nonEssentialOpen = nonEssentialOpen;
     }
 
     public LAW getMaskRequired() {

@@ -1,7 +1,11 @@
-package com.sysag_cds.world;
+package com.sysag_cds.superagents;
 
 import com.sysag_cds.utility.Decree;
+import com.sysag_cds.world.Building;
+import com.sysag_cds.world.RandomBuilding;
+import com.sysag_cds.world.World;
 import jade.core.Agent;
+import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.Property;
@@ -11,78 +15,108 @@ import jade.lang.acl.ACLMessage;
 import jade.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
 
-/**
- * Agente Business in cui si recano gli agenti Person per svariati motivi. Gestisce la propria apertura/chiusura
- * in base ai decreti dell'agente Government.
- */
-public class Business extends Agent {
+import java.util.LinkedList;
+import java.util.List;
 
-    Building position;
-    boolean open;
-    String category;
+public class EventPlanner extends Agent {
 
+    static int eventTick = 3*Simulation.day;
+    boolean firstEvent = true;
+    boolean allowed = true;
+
+    @Override
     protected void setup() {
-        // inizializzazione agente
-        Object[] args = this.getArguments();
-        if (args != null) {
-            // il primo argomento specifica la categoria
-            System.out.println((String) args[0]);
-            category = (String) args[0];
 
-            // il secondo argomento specifica la posizione
-            if (args.length >= 2) {
-                position = World.getInstance().findBuilding(new Building((String) args[1]));
-            }
-            // il terzo argomento specifica la densità
-            if (args.length >= 3) {
-                position.setDensity(Double.parseDouble((String)args[2]));
-            }
-        }
-        System.out.println("business "+position.toString());
-        open=true;
-        registerService();
         subscribeDecrees();
+        addBehaviour(new TickerBehaviour(this, eventTick * Simulation.tick) {
+            @Override
+            protected void onTick() {
+                Building setting = findSetting();
+                if (setting!=null && allowed) {
+                    if (firstEvent) {
+                        firstEvent = false;
+                        registerService(setting);
+                    } else {
+                        updateService(setting);
+                    }
+                }
+            }
+        });
     }
 
-    public void setOpen(boolean open) {
-        this.open = open;
-        updateService();
-        //System.out.println("Open= "+open+" "+"Park= "+category+park+" "+"Open2= "+this.open+" ");
-    }
-
-    private void registerService() {
-        try {
-            DFService.register(this, createService());
-        } catch (FIPAException fe) {
-            fe.printStackTrace();
-        }
-    }
-
-    public void updateService() {
-        try {
-            DFService.modify(this, createService());
-        } catch (FIPAException fe) {
-            fe.printStackTrace();
-        }
-    }
-
-    private DFAgentDescription createService() {
+    private DFAgentDescription createService(Building setting) {
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
-        sd.setType(category);
+        sd.setType("Event");
         sd.setName(getLocalName());
-        sd.addProperties(new Property("Open",Boolean.toString(open)));
-        sd.addProperties(new Property("Location", position.getLocation()));
-        sd.addProperties(new Property("Density",position.density.toString()));
+        sd.addProperties(new Property("Location", setting.getLocation()));
+        sd.addProperties(new Property("Density", setting.getDensity().toString()));
         dfd.addServices(sd);
 
         return dfd;
     }
 
-    /**
-     * Notifica aggiornamenti alle normative
-     */
+    private void registerService(Building setting) {
+        try {
+            DFService.register(this, createService(setting));
+        } catch (FIPAException fe) {
+            fe.printStackTrace();
+        }
+    }
+
+    public void updateService(Building setting) {
+        try {
+            DFService.modify(this, createService(setting));
+        } catch (FIPAException fe) {
+            fe.printStackTrace();
+        }
+    }
+
+    protected Building findSetting() {
+
+        List<Building> results = new LinkedList<>();
+        Building setting = null;
+
+        // search template
+        DFAgentDescription dfdt = new DFAgentDescription();
+        ServiceDescription sdt = new ServiceDescription();
+        sdt.setType("Park");
+        sdt.addProperties(new Property("Open",true));
+        dfdt.addServices(sdt);
+
+        // search
+        DFAgentDescription[] dfds = new DFAgentDescription[0];
+        try {
+            dfds = DFService.search(this, dfdt);
+        } catch (FIPAException e) {
+            e.printStackTrace();
+        }
+
+        // get results
+        for (DFAgentDescription dfd : dfds) {
+            Iterator allServices = dfd.getAllServices();
+            while (allServices.hasNext()) {
+                ServiceDescription sd = (ServiceDescription) allServices.next();
+                Iterator allProperties = sd.getAllProperties();
+                Building buil=new Building("test");
+                while (allProperties.hasNext()) {
+                    Property p = (Property) allProperties.next();
+                    if (p.getName().equals("Location"))
+                        buil.setLocation((String) p.getValue());
+                    if (p.getName().equals("Density"))
+                        buil.setDensity(Double.parseDouble((String) p.getValue()));
+                }
+                results.add(buil);
+            }
+        }
+        // pick a random one
+        if (results.size()>0)
+            setting = new RandomBuilding(results).getRandomBuilding();
+
+        return setting;
+    }
+
     public void subscribeDecrees() {
         Decree currentDecree= new Decree();
         DFAgentDescription template = new DFAgentDescription();
@@ -117,6 +151,8 @@ public class Business extends Agent {
                                     currentDecree.setParkOpen( Boolean.parseBoolean((String)p.getValue()));
                                 if (p.getName().equals("nonEssentialOpen"))
                                     currentDecree.setNonEssentialOpen(Boolean.parseBoolean((String)p.getValue()));
+                                if (p.getName().equals("eventOpen"))
+                                    currentDecree.setEventOpen(Boolean.parseBoolean((String)p.getValue()));
 
                             }
                             manageDecree(currentDecree);
@@ -131,11 +167,6 @@ public class Business extends Agent {
     }
 
     void manageDecree(Decree d) {
-        boolean open = d.getDensity() > position.getDensity();
-        if (category.equals("Park") && !d.getParkOpen())
-            open = false;
-        if (category.equals("nonEssential") && !d.getNonEssentialOpen())
-            open = false;
-        setOpen(open);
+        allowed = d.getEventOpen();
     }
 }

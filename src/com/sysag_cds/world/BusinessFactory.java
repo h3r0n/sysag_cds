@@ -35,7 +35,11 @@ public class BusinessFactory {
 
         businessArgs[0] = cp.getRandomCategory();
         businessArgs[1] = b.toString();
-        businessArgs[2] = Double.toString(0.5 + Math.random() * .5);
+        if (businessArgs[0].equals("Park")) {
+            businessArgs[2] = Double.toString(0.1 + Math.random() * .9);
+        } else {
+            businessArgs[2] = Double.toString(0.5 + Math.random() * .5);
+        }
 
         try {
             AgentController a = c.createNewAgent(
