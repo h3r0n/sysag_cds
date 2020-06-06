@@ -23,8 +23,8 @@ import jade.util.leap.Iterator;
 public class Worker extends Person {
 
     Building workplace = null;
-    int workTicks = 10;
-    int workInterval = 5;
+    int workTicks = 30;
+    int workInterval = 60;
     boolean working = false;
     double workContagion = 0.015;
 

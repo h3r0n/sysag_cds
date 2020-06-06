@@ -28,7 +28,7 @@ import jade.wrapper.StaleProxyException;
  *     Crea poi una mappa con 4 edifici
  */
 public class Simulation extends Agent {
-    public static int tick = 1000;
+    public static int tick = 100;
     public static boolean debug = true;
 
     private int nPeople;
