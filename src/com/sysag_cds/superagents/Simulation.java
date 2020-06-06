@@ -42,8 +42,8 @@ public class Simulation extends Agent {
 
     protected void setup() {
 
-        startStatistics();  // avvia superagente Statistics
-        startGovernment();  // avvia superagente Government
+        startAgent("Statistics", "com.sysag_cds.superagents.Statistics");  // avvia superagente Statistics
+        startAgent("Government", "com.sysag_cds.superagents.Government");  // avvia superagente Government
 
         readArgs(getArguments());   // leggi argomenti
         World.getInstance(mapSize); // inizializza mappa
@@ -80,6 +80,8 @@ public class Simulation extends Agent {
 
         for (int i = 0; i < nPeople; i++)
             pf.create();
+
+        startAgent("EventPlanner", "com.sysag_cds.superagents.EventPlanner");  // avvia superagente EventPlanner
     }
 
     private void readArgs(Object[] args) {
@@ -94,23 +96,11 @@ public class Simulation extends Agent {
         nBusiness = Integer.parseInt((String) args[8]);
     }
 
-    private void startStatistics() {
+    private void startAgent(String nickname, String classname) {
         ContainerController c = getContainerController();
         try {
             AgentController a = c.createNewAgent(
-                    "Statistics", "com.sysag_cds.superagents.Statistics", null
-            );
-            a.start();
-        } catch (StaleProxyException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void startGovernment() {
-        ContainerController c = getContainerController();
-        try {
-            AgentController a = c.createNewAgent(
-                    "Government", "com.sysag_cds.superagents.Government", null
+                    nickname, classname, null
             );
             a.start();
         } catch (StaleProxyException e) {

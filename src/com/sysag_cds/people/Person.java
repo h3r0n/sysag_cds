@@ -49,8 +49,10 @@ public class Person extends TaskAgent {
     static int walkingTicks = Simulation.day;    // tempo tra passeggiate
     static int parkTicks = 2*Simulation.day;    // tempo tra visite al parco
     static int stayParkTicks = (int)(.5*Simulation.day);    // tempo di permanenza al parco
+    static int stayEventTicks = (int)(.5*Simulation.day);    // tempo di permanenza ad un evento
     static double deathProbability = 0.20;  // probabilità di morire al termine della malattia
     static double illProbability = 0.1;     // probabilità giornaliera di necessitare un ricovero
+    static double eventProbability = 0.2;   // probabilità di accettare un invito ad un evento
 
     // status
     int food = maxfood;  // riserva beni di prima necessità
@@ -59,6 +61,7 @@ public class Person extends TaskAgent {
     boolean ill = false;
     boolean goingPark = false;
     boolean goingWalk = false;
+    boolean goingEvent = false;
     boolean naughty = false; // mancato rispetto dei decreti
     static int walkingDistance = 10; // distanza massima passeggiata (naugthy)
     protected SEIR diseaseStatus = SEIR.SUSCEPTIBLE;    // stato di avanzamento della malattia
@@ -638,6 +641,81 @@ public class Person extends TaskAgent {
             }
         }
         return closest;
+    }
+
+    // ------------------------------------
+    //  Eventi
+    // ------------------------------------
+
+    /**
+     * Notifica inviti ad eventi
+     */
+    public void subscribeEvents() {
+        DFAgentDescription template = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("Event");
+        template.addServices(sd);
+
+        SubscriptionInitiator subscription = new SubscriptionInitiator(
+                this, DFService.createSubscriptionMessage(this, getDefaultDF(), template, null)) {
+            protected void handleInform(ACLMessage inform) {
+                try {
+                    if (Simulation.debug)
+                        System.out.println(getLocalName()+" received a new event invitation.");
+                    DFAgentDescription[] dfds = DFService.decodeNotification(inform.getContent());
+                    for (DFAgentDescription dfd : dfds) {
+                        Iterator allServices = dfd.getAllServices();
+                        while (allServices.hasNext()) {
+                            ServiceDescription sd = (ServiceDescription) allServices.next();
+                            Iterator allProperties = sd.getAllProperties();
+                            Building buil=new Building("test");
+                            while (allProperties.hasNext()) {
+                                Property p = (Property) allProperties.next();
+                                if (p.getName().equals("Location"))
+                                    buil.setLocation((String) p.getValue());
+                                if (p.getName().equals("Density"))
+                                    buil.setDensity(Double.parseDouble((String) p.getValue()));
+                            }
+                            if (randomGoEvent())
+                                goEvent(buil);
+                        }
+                    }
+                } catch (FIPAException fe) {
+                    fe.printStackTrace();
+                }
+            }
+        };
+        addBehaviour(subscription);
+    }
+
+    void goEvent(Building eventSetting) {
+        SequentialBehaviour task = new SequentialBehaviour();
+
+        task.addSubBehaviour(new OneShotBehaviour() {
+            @Override
+            public void action() {
+                if (Simulation.debug)
+                    System.out.println(getLocalName()+" is going to the Event.");
+            }
+        });
+        task.addSubBehaviour(new TravelTask(this, eventSetting));
+        task.addSubBehaviour(new WaitingTask(this, Simulation.tick * stayEventTicks));
+        task.addSubBehaviour(new OneShotBehaviour() {
+            @Override
+            public void action() {
+                goingPark = false;
+                if (Simulation.debug)
+                    System.out.println(getLocalName()+" is coming back home from the Event.");
+            }
+        });
+        task.addSubBehaviour(new TravelTask(this, home));
+        scheduleTask(task);
+        if (Simulation.debug)
+            System.out.println(getLocalName()+" wants to go to the Event.");
+    }
+
+    boolean randomGoEvent() {
+        return BooleanProbability.getBoolean(eventProbability);
     }
 
     // ------------------------------------
