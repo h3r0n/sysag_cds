@@ -80,7 +80,7 @@ public class Person extends TaskAgent {
     @Override
     protected void setup() {
 
-        randomize();
+        //randomize();
 
         if (Simulation.debug)
             System.out.println(getLocalName() + " started.");
@@ -108,6 +108,7 @@ public class Person extends TaskAgent {
                 home = World.getInstance().findBuilding(new Building((String) args[1]));
                 home.setDensity(1.0);
                 position = home;
+                System.out.println(this.getLocalName()+" abita in "+ position.toString());
             }
             // il terzo argomento specifica l'incoscienza
             if (args.length >= 3 && args[2].equals("True")) {
@@ -329,6 +330,7 @@ public class Person extends TaskAgent {
         if (diseaseStatus == SEIR.SUSCEPTIBLE) {
 
             unsubscribeAll();
+            updateStatistics("Exposed");  //Manda messaggio all'agente Statistics
             diseaseStatus = SEIR.EXPOSED;
 
             if (Simulation.debug)

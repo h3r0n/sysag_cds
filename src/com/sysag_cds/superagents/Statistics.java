@@ -23,6 +23,7 @@ public class Statistics extends Agent {
     private int recovered = 0;
     private int infected = 0;
     private int currentInfected = 0;
+    private int exposed = 0;
     private static int updateTicks = 5;
     int time = 0;
     StatGui gui = new StatGui();
@@ -38,7 +39,7 @@ public class Statistics extends Agent {
                 time+=updateTicks;
                 if (Simulation.debug)
                     printStatistics();
-                gui.addData((double) time/Simulation.day,infected,currentInfected,recovered,dead,beds);
+                gui.addData((double) time/Simulation.day,infected,currentInfected,exposed,recovered,dead,beds);
             }
         });
     }
@@ -72,6 +73,9 @@ public class Statistics extends Agent {
                     case "Infected":
                         infected++;
                         break;
+                    case "Exposed":
+                        exposed++;
+                        break;
                     case "Recovered":
                         recovered++;
                         break;
@@ -85,6 +89,7 @@ public class Statistics extends Agent {
     public void printStatistics() {
         System.out.println(infected+" total infected");
         System.out.println(currentInfected+" currently infected");
+        System.out.println(exposed+" total exposed");
         System.out.println(recovered+" recovered");
         System.out.println(dead+" deaths");
     }
