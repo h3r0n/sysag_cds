@@ -1,7 +1,7 @@
 # Simulazione della diffusione di una patologia contagiosa tramite un sistema ad agenti
 di Giuseppe Antonio Nanna e Nicola Flavio Quatraro
 
-![](demo1.png)
+![](demo1.gif)
 
 Lo scopo del progetto è quello di simulare la diffusione di una patologia contagiosa come il
 COVID-19 mediante un sistema multi agente.
@@ -51,7 +51,7 @@ atti a contrastare la diffusione della patologia. L'agente opera emanando *decre
 regolano il comportamento degli altri agenti, in particolare:
 * l'obbligatorietà dei dispositivi di protezione individuale in ambienti chiusi e aperti
 * l'apertura/chiusura di particolari luoghi pubblici/attività/eventi
-* la rigidità nel far rispettare le norme di distanziamento sociale negli edifici (le attività
+* la rigidità delle norme di distanziamento sociale negli edifici (le attività
 non in grado di rispettare la norma, saranno chiuse)
 * la distanza massima percorribile negli spostamenti
 * la distanza massima percorribile per attività motorie
@@ -62,10 +62,10 @@ chiusura degli edifici pubblici, di servizi, luoghi di lavoro e di svago.
 ### Altri
 
 L'agente `HealthCare` tiene traccia del numero totale di posti letto disponibili negli ospedali. Se
-ad un paziente viene negata la degenza in ospedale a casua della mancanza di posti, le sue
+ad un paziente viene negata la degenza in ospedale a causa della mancanza di posti, le sue
 possibilità di sopravvivenza, ne saranno inficiate.
 
-L'agente `EventPlanner` invita gli agenti `Person` a partecipare ad eventi pubblici di massa, come
+L'agente `EventPlanner` invita gli agenti `Person` a partecipare a eventi pubblici di massa, come
 manifestazioni, concerti, ... se consentite da `Government`.
 
 ## Contestualizzazione geografica (`com.sysag_cds.world`)
@@ -83,7 +83,7 @@ grafo come:
 * selezionare nodi casuali nel grafo
 
 ### `Location`
-`Road` (stada) e `Building` (edificio) sono sottoclassi della classe `Location` che individua un
+`Road` (strada) e `Building` (edificio) sono sottoclassi della classe `Location` che individua un
 generico luogo nella mappa. Ogni istanza di `Location` può essere vista come un generico indirizzo
 ed è caratterizzata da una *density* che fissa il massimo del distanziamento sociale
 possibile nella data `Location`. Per questo motivo i luoghi all'aperto, come le `Road` hanno una
@@ -124,11 +124,11 @@ Ad ogni `Person` è associato uno stadio della malattia in accordo con il modell
 * *SUSCEPTIBLE*: individui sani che possono essere contagiati
 * *EXPOSED*: individui esposti al contagio, ma che non mostrano sintomi e non possono ancora
 contagiare altri. In incubazione.
-* *INFECTIOUS*: invidui affetti dalla patologia che possono mostrare sintomi. Sono contagiosi
+* *INFECTIOUS*: individui affetti dalla patologia che possono mostrare sintomi. Sono contagiosi
 * *RECOVERED*: individui guariti e/o immuni alla patologia.
 
 ### Contagio
-Il contagio può avvenire quando due o più individui, di cui almeno uno *INFECTIOUS*, si trovano
+Il contagio può avvenire quando due individui, un *SUSCEPTIBLE* e un *INFECTIOUS*, si trovano
 nello stesso momento nella stessa `Location`. Il contagio avviene solo se i due individui si
 incontrano (`Person.meet()`). L'incontro è considerato una violazione delle norme di distanziamento
 sociale che può avvenire in base ad una probabilità che dipende dalla `density` del luogo,

@@ -80,7 +80,7 @@ public class Person extends TaskAgent {
     @Override
     protected void setup() {
 
-        //randomize();
+        randomize();
 
         if (Simulation.debug)
             System.out.println(getLocalName() + " started.");
