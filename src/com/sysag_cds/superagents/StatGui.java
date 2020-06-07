@@ -45,11 +45,11 @@ public class StatGui {
         chart.addSeries("Totale positivi", datax, datatp);
         chart.getSeriesMap().get("Totale positivi").setLineColor(new Color(239,78,99));
 
-        chart.addSeries("Attualmente infetti", datax, datacp);
-        chart.getSeriesMap().get("Attualmente infetti").setLineColor(new Color(245,149,143));
+        chart.addSeries("Attualmente positivi", datax, datacp);
+        chart.getSeriesMap().get("Attualmente positivi").setLineColor(new Color(245,149,143));
 
-        chart.addSeries("Totale esposti", datax, datae);
-        chart.getSeriesMap().get("Totale esposti").setLineColor(new Color(245,29,243));
+        chart.addSeries("Totale contagiati", datax, datae);
+        chart.getSeriesMap().get("Totale contagiati").setLineColor(new Color(191, 191, 191));
 
         chart.addSeries("Guariti", datax, datar);
         chart.getSeriesMap().get("Guariti").setLineColor(new Color(24,178,144));
@@ -83,8 +83,8 @@ public class StatGui {
 
     void update() {
         chart.updateXYSeries("Totale positivi", datax,datatp,null);
-        chart.updateXYSeries("Attualmente infetti", datax, datacp,null);
-        chart.updateXYSeries("Totale esposti",datax,datae,null);
+        chart.updateXYSeries("Attualmente positivi", datax, datacp,null);
+        chart.updateXYSeries("Totale contagiati",datax,datae,null);
         chart.updateXYSeries("Guariti", datax, datar,null);
         chart.updateXYSeries("Morti", datax, datad,null);
         chart.updateXYSeries("Posti letto liberi", datax, datap,null);

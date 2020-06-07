@@ -31,9 +31,9 @@ import jade.wrapper.StaleProxyException;
  *     Tra tutti gli ospedali i posti letto sono 5
  */
 public class Simulation extends Agent {
-    public static int tick = 1000;
+    public static int tick = 100;
     public static int day = 60;
-    public static boolean debug = true;
+    public static boolean debug = false;
 
     private int nPeople;
     private int nBusiness;

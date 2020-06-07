@@ -87,8 +87,8 @@ public class Statistics extends Agent {
     }
 
     public void printStatistics() {
-        System.out.println(infected+" total infected");
-        System.out.println(currentInfected+" currently infected");
+        System.out.println(infected+" total infectious");
+        System.out.println(currentInfected+" currently infectious");
         System.out.println(exposed+" total exposed");
         System.out.println(recovered+" recovered");
         System.out.println(dead+" deaths");

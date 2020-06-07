@@ -3,7 +3,6 @@ package com.sysag_cds.superagents;
 import com.sysag_cds.utility.Decree;
 import jade.gui.GuiAgent;
 import jade.gui.GuiEvent;
-import javafx.scene.control.CheckBox;
 
 import java.awt.*;
 import java.util.Hashtable;
