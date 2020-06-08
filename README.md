@@ -1,7 +1,7 @@
 # Simulazione della diffusione di una patologia contagiosa tramite un sistema ad agenti
 di Giuseppe Antonio Nanna e Nicola Flavio Quatraro
 
-![](demo1.gif)
+![](img/demo1.gif)
 
 Lo scopo del progetto è quello di simulare la diffusione di una patologia contagiosa come il
 COVID-19 mediante un sistema multi agente.
@@ -72,7 +72,7 @@ comportamento degli agenti.
 Per terminare l'esecuzione chiudere il terminale o una qualsiasi delle due finestre.
 
 #### Esportare i dati
-![](demo1.png)
+![](img/demo1.png)
 
 In qualsiasi momento è possibile cliccare con il tasto destro sul grafico e selezionare
 "Save As..." per salvarlo come immagine PNG o "Export To..." per esportarne i dati sotto forma
@@ -111,7 +111,7 @@ Il grafico è realizzato con la libreria [XChart](https://github.com/knowm/XChar
 
 ### `Government`
 
-![](demo2.png)
+![](img/demo2.png)
 
 L'agente `Government` consente all'utente di simulare provvedimenti di governi e amministrazioni
 atti a contrastare la diffusione della patologia. L'agente opera emanando *decreti* (`Decree`) che
