@@ -79,6 +79,55 @@ In qualsiasi momento è possibile cliccare con il tasto destro sul grafico e sel
 di foglio di calcolo.
 
 # Guida sviluppatori
+#### Prerequisiti
+Si consiglia l'uso dell'IDE [IntelliJ IDEA](https://www.jetbrains.com/idea/)
+
+Verificare di aver installato il JDK di Java 8 o superiore. In caso contrario scaricarlo, ad
+esempio da [questo indirizzo](https://adoptopenjdk.net/releases.html?variant=openjdk8&jvmVariant=hotspot).
+
+#### Download
+
+![](img/dev1.png)
+
+Avviare IntelliJ IDEA e selezionare "Get from version control".
+
+![](img/dev2.png)
+
+Inserire l'URL di questo repository: `https://github.com/h3r0n/sysag_cds` e
+attendere il download
+
+![](img/dev3.png)
+
+#### Configurazione
+
+![](img/dev4.png)
+
+Verificare che sia selezionata la giusta versione di Java
+
+#### Esecuzione
+
+![](img/dev5.png)
+
+Cliccare su "Add Configuration..."
+
+![](img/dev6.png)
+
+Cliccare sul "+", quindi selezionare "Application".
+Alla voce "Main class" inserire `jade.Boot`. Alla voce program arguments
+inserire i parametri desiderati, ad esempio:
+```
+java -jar sysag-cds_fast.jar -agents "simulation:com.sysag_cds.superagents.Simulation(100,.9,0,.1,0,.2,.5,15,20,5)"
+```
+![](img/dev7.png)
+
+Cliccare sul triangolino verde per avviare la configurazione appena salvata.
+
+#### Compilazione
+
+![](img/dev8.png)
+
+Per generare un nuovo file *.jar in `out/artifacts/sysag_cds_jar` selezionare dal
+menù principale la voce `"Build">"Build Artifacts..."
 
 # Descrizione del sistema
 ## Agenti speciali (`com.sysag_cds.superagents`)
