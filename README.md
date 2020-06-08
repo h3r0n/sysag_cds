@@ -113,8 +113,8 @@ Cliccare su "Add Configuration..."
 ![](img/dev6.png)
 
 Cliccare sul "+", quindi selezionare "Application".
-Alla voce "Main class" inserire `jade.Boot`. Alla voce program arguments
-inserire i parametri desiderati, ad esempio:
+Nel campo "Main class" inserire `jade.Boot`. Nel campo "Program arguments"
+inserire invece i parametri desiderati, ad esempio:
 ```
 java -jar sysag-cds_fast.jar -agents "simulation:com.sysag_cds.superagents.Simulation(100,.9,0,.1,0,.2,.5,15,20,5)"
 ```
