@@ -128,7 +128,8 @@ public class EventPlanner extends Agent {
                 this, DFService.createSubscriptionMessage(this, getDefaultDF(), template, null)) {
             protected void handleInform(ACLMessage inform) {
                 try {
-                    System.out.println(getLocalName()+" received a new decree");
+                    if (Simulation.debug)
+                        System.out.println(getLocalName()+" received a new decree");
                     DFAgentDescription[] dfds = DFService.decodeNotification(inform.getContent());
                     for (DFAgentDescription dfd : dfds) {
                         Iterator allServices = dfd.getAllServices();

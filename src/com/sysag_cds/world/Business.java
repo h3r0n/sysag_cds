@@ -1,5 +1,6 @@
 package com.sysag_cds.world;
 
+import com.sysag_cds.superagents.Simulation;
 import com.sysag_cds.utility.Decree;
 import jade.core.Agent;
 import jade.domain.DFService;
@@ -26,7 +27,8 @@ public class Business extends Agent {
         Object[] args = this.getArguments();
         if (args != null) {
             // il primo argomento specifica la categoria
-            System.out.println((String) args[0]);
+            if (Simulation.debug)
+                System.out.println((String) args[0]);
             category = (String) args[0];
 
             // il secondo argomento specifica la posizione
@@ -38,7 +40,8 @@ public class Business extends Agent {
                 position.setDensity(Double.parseDouble((String)args[2]));
             }
         }
-        System.out.println("business "+position.toString());
+        if (Simulation.debug)
+            System.out.println("business "+position.toString());
         open=true;
         registerService();
         subscribeDecrees();
@@ -94,7 +97,8 @@ public class Business extends Agent {
                 this, DFService.createSubscriptionMessage(this, getDefaultDF(), template, null)) {
             protected void handleInform(ACLMessage inform) {
                 try {
-                    System.out.println(getLocalName()+" received a new decree");
+                    if (Simulation.debug)
+                        System.out.println(getLocalName()+" received a new decree");
                     DFAgentDescription[] dfds = DFService.decodeNotification(inform.getContent());
                     for (DFAgentDescription dfd : dfds) {
                         Iterator allServices = dfd.getAllServices();
@@ -136,6 +140,8 @@ public class Business extends Agent {
             open = false;
         if (category.equals("nonEssential") && !d.getNonEssentialOpen())
             open = false;
+        if (category.equals("Hospital"))
+            open = true;
         setOpen(open);
     }
 }
