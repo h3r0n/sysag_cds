@@ -8,8 +8,8 @@ import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
 
 /**
- * Classe factory che crea agenti di tipo Person nel container corrente, assegnando loro una casa, un posto di lavoro
- * (se lavoratori), una coscienziosità e uno stadio della malattia (modello SEIR).
+ * Factory class that generates Person agents in the current container, giving them an home,(if worker) a job, a naughty status and a SEIR status.
+ *
  */
 public class PersonFactory {
 
@@ -25,6 +25,16 @@ public class PersonFactory {
     Object[] personArgs = new Object[3];
     Object[] workerArgs = new Object[4];
 
+    /**
+     * Instantiates a new Person factory.
+     *
+     * @param creator the creator which creates the person factory instance
+     * @param bp      the Random Building bp instance for building places
+     * @param wpp     the Random Building wpp instance for working places
+     * @param sp      the Random SEIR sp instance for SEIR probabilities
+     * @param np      the naughty probability np
+     * @param wp      the working probability wp
+     */
     public PersonFactory(Agent creator, RandomBuilding bp, RandomBuilding wpp, RandomSEIR sp, double np, double wp) {
         c = creator.getContainerController();
         buildingProb = bp;
@@ -34,6 +44,9 @@ public class PersonFactory {
         wpProb = wpp;
     }
 
+    /**
+     * Creates a Person agent.
+     */
     public void create() {
         if (BooleanProbability.getBoolean(workingProb)) {
 

@@ -12,8 +12,8 @@ import jade.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
 
 /**
- * Agente Business in cui si recano gli agenti Person per svariati motivi. Gestisce la propria apertura/chiusura
- * in base ai decreti dell'agente Government.
+ * Business Agent to whom other Person agents go for different reasons.
+ * It is open or closed according to the decree updates.
  */
 public class Business extends Agent {
 
@@ -44,6 +44,11 @@ public class Business extends Agent {
         subscribeDecrees();
     }
 
+    /**
+     * Sets the business open.
+     *
+     * @param open the open state
+     */
     public void setOpen(boolean open) {
         this.open = open;
         updateService();
@@ -58,6 +63,9 @@ public class Business extends Agent {
         }
     }
 
+    /**
+     * Update service.
+     */
     public void updateService() {
         try {
             DFService.modify(this, createService());
@@ -81,7 +89,7 @@ public class Business extends Agent {
     }
 
     /**
-     * Notifica aggiornamenti alle normative
+     * Notification service for decree updates
      */
     public void subscribeDecrees() {
         Decree currentDecree= new Decree();
@@ -130,6 +138,11 @@ public class Business extends Agent {
         addBehaviour(subscription);
     }
 
+    /**
+     * Manages the decree.
+     *
+     * @param d the decree
+     */
     void manageDecree(Decree d) {
         boolean open = d.getDensity() > position.getDensity();
         if (category.equals("Park") && !d.getParkOpen())

@@ -9,6 +9,9 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 
+/**
+ * Health care class for the management of the available hospital beds.
+ */
 public class HealthCare extends Agent {
     int beds;
 
@@ -21,6 +24,9 @@ public class HealthCare extends Agent {
         addBehaviour(new ManageBeds());
     }
 
+    /**
+     * Manage beds behaviour for updating the hospital beds available.
+     */
     class ManageBeds extends CyclicBehaviour {
         @Override
         public void action() {
@@ -47,6 +53,9 @@ public class HealthCare extends Agent {
         }
     }
 
+    /**
+     * Update service.
+     */
     public void updateService() {
         try {
             DFService.modify(this, createService());

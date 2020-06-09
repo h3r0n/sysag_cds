@@ -3,7 +3,7 @@ package com.sysag_cds.world;
 import com.google.common.base.Supplier;
 
 /**
- * Classe factory che restituisce istanze di classe Road.
+ * Factory Class that generates Road instances
  */
 public class RoadFactory implements Supplier<Road> {
 

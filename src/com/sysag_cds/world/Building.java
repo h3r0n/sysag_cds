@@ -1,7 +1,7 @@
 package com.sysag_cds.world;
 
 /**
- * Indirizzo relativo ad un edificio.
+ * A Building with is Location
  */
 public class Building extends Location {
     public Building(String l) {

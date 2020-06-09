@@ -1,7 +1,7 @@
 package com.sysag_cds.world;
 
 /**
- * Indirizzo relativo ad una strada
+ * A Road with is Location
  */
 public class Road extends Location {
 

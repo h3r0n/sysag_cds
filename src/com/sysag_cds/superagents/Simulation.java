@@ -13,25 +13,24 @@ import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
 
 /**
- * L'agente Simulation crea gli altri agenti e avvia la simulazione.
+ * The Simulation Agent creates other agents and starts the simulation.
+ * Simulation Parameters:
+ *     [0] number of Person agents
+ *     [1-4] probability that generates  SUSCEPTIBLE,EXPOSED,INFECTIOUS,RECOVERED Person agents
+ *     [5] probability that generates naughty Person agents (beetwen 0 and 1)
+ *     [6] probability that generates workers
+ *     [7] number of Building of each side, the map is a square. It must be >= 2
+ *     [8] number of Business building
+ *     [9] number of hospital beds
  *
- * Parametri di Simulation:
- *     [0] numero di Person
- *     [2-4] probabilità di creare persone SUSCEPTIBLE,EXPOSED,INFECTIOUS,RECOVERED
- *     [5] probabilità di creare persone non coscienziose (tra 0 e 1)
- *     [6] probabilità di creare lavoratori
- *     [7] numero di Building per lato, considerando che la mappa è un quadrato. Deve essere >= 2
- *     [8] numero di Business
- *     [9] numero di posti letto
- *
- * Esempio: -agents simulation:com.sysag_cds.superagents.Simulation(100,.9,0,.1,0,.2,.5,15,20,5)
- *     Crea 100 Person, con il 90% di probabilità di essere SUSCEPTIBLE e il 10% di essere INFECTIOUS
- *     hanno il 20% di probabilità di essere incoscienti e il 50% di essere lavoratori
- *     Crea poi una mappa con 225 edifici, in cui risiedono 20 Business
- *     Tra tutti gli ospedali i posti letto sono 5
+ * Example: -agents simulation:com.sysag_cds.superagents.Simulation(100,.9,0,.1,0,.2,.5,15,20,5)
+ *     Generates 100 Persons, with the 90% probability of been SUSCEPTIBLE and the 10% probability to be INFECTIOUS
+ *     20% probability to be naughty e il 50% probability to be workers
+ *     Generates a map composed by 225 building, in which 20 are Business
+ *     Among all hospitals there are 5 beds
  */
 public class Simulation extends Agent {
-    public static int tick = 100;
+    public static int tick = 1000;
     public static int day = 60;
     public static boolean debug = false;
 

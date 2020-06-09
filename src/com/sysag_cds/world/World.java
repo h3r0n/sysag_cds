@@ -12,8 +12,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Classe, la cui unica instanza (singleton) rappresenta la mappa geografica in cui si svolge la simulazione.
- * Offre metodi per il pathfinding.
+ * A Class with a single instance (singleton) that represents a map in which the simulation takes place.
+ * Has PathFinding methods.
  */
 public class World {
 
@@ -28,6 +28,12 @@ public class World {
         pathFinder.enableCaching(true);
     }
 
+    /**
+     * Gets instance.
+     *
+     * @param mapSize the map size
+     * @return the World instance
+     */
     public static World getInstance(int mapSize) {
         if (instance == null) {
             instance= new World(mapSize);
@@ -35,6 +41,11 @@ public class World {
         return instance;
     }
 
+    /**
+     * Gets instance.
+     *
+     * @return the World instance
+     */
     public static World getInstance() {
         return instance;
     }
@@ -59,20 +70,45 @@ public class World {
         }
     }
 
+    /**
+     * Gets buildings list.
+     *
+     * @return the buildings list
+     */
     public List<Building> getBuildings() {
         return buildingList;
     }
 
+    /**
+     * Gets the path.
+     *
+     * @param begin the begin
+     * @param end   the end
+     * @return the path
+     */
     public synchronized List<Road> getPath(Building begin, Building end) {
         if (begin.equals(end))
             return null;
         return pathFinder.getPath(begin, end);
     }
 
+    /**
+     * Gets the distance.
+     *
+     * @param begin the begin
+     * @param end   the end
+     * @return the distance
+     */
     public synchronized int getDistance(Building begin, Building end) {
         return pathFinder.getDistance(begin, end).intValue();
     }
 
+    /**
+     * Returns a random building given the map
+     *
+     * @param m the map
+     * @return the building
+     */
     public static Building randomBuilding(Graph<Building,Road> m) {
         Collection<Building> buildings =  m.getVertices();
         return buildings.stream()
@@ -80,12 +116,24 @@ public class World {
                 .findFirst().orElse(null);
     }
 
+    /**
+     * Random building.
+     *
+     * @return the building
+     */
     public Building randomBuilding() {
         return buildingList.stream()
                 .skip((int) (buildingList.size() * Math.random()))
                 .findFirst().orElse(null);
     }
 
+    /**
+     * Returns a random walk.
+     *
+     * @param begin       the begin
+     * @param maxDistance the max distance
+     * @return the random walk
+     */
     public List<Road> getRandomWalk(Building begin, int maxDistance) {
 
         Graph<Building,Road> kNeighbor = new KNeighborhoodFilter<Building,Road>(
@@ -120,6 +168,12 @@ public class World {
         return stream.collect(Collectors.toList());
     }
 
+    /**
+     * Finds the building.
+     *
+     * @param b the building searched
+     * @return the building found
+     */
     public Building findBuilding(Building b) {
         return buildingList.stream()
                 .filter(building -> building.equals(b))

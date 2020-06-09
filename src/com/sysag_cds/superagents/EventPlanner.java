@@ -18,6 +18,9 @@ import jade.util.leap.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * The class Event planner.
+ */
 public class EventPlanner extends Agent {
 
     static int eventTick = 3*Simulation.day;
@@ -73,6 +76,11 @@ public class EventPlanner extends Agent {
         }
     }
 
+    /**
+     * Find setting building for the event location.
+     *
+     * @return the building where the event will occur
+     */
     protected Building findSetting() {
 
         List<Building> results = new LinkedList<>();
@@ -117,6 +125,9 @@ public class EventPlanner extends Agent {
         return setting;
     }
 
+    /**
+     * Notification service for decree updates.
+     */
     public void subscribeDecrees() {
         Decree currentDecree= new Decree();
         DFAgentDescription template = new DFAgentDescription();
@@ -166,6 +177,11 @@ public class EventPlanner extends Agent {
         addBehaviour(subscription);
     }
 
+    /**
+     * Manage decree.
+     *
+     * @param d the decree
+     */
     void manageDecree(Decree d) {
         allowed = d.getEventOpen();
     }

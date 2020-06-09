@@ -9,6 +9,9 @@ import java.util.Hashtable;
 import javax.swing.*;
 import static javax.swing.GroupLayout.Alignment.*;
 
+/**
+ * Goverment gui for the creation of decrees.
+ */
 public class GovGui {
     GuiAgent myAgent;
     JLabel maskLabel = new JLabel("Obbligo DPI: ");
@@ -31,6 +34,11 @@ public class GovGui {
 
     JFrame frame = new JFrame("Governo");
 
+    /**
+     * Instantiates a new Gov gui.
+     *
+     * @param a the GuiAgent a
+     */
     public GovGui(GuiAgent a) {
         myAgent = a;
         buildGui();

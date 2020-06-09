@@ -30,6 +30,13 @@ import java.util.List;
  */
 public class Person extends TaskAgent {
 
+    /**
+     * The enum Seir which models the stages of the disease:
+     * SUSCEPTIBLE: the individual has never come in contact with the virus yet
+     * EXPOSED: the individual has come in contact with the virus and is now ill but not infectious yet
+     * INFECTIOUS: the individual can now infect other individuals
+     * RECOVERED: the individual is definitely healed and can't be infected again
+     */
     public enum SEIR {
         SUSCEPTIBLE,
         EXPOSED,
@@ -80,7 +87,7 @@ public class Person extends TaskAgent {
     @Override
     protected void setup() {
 
-        //randomize();
+        randomize();
 
         if (Simulation.debug)
             System.out.println(getLocalName() + " started.");
@@ -314,6 +321,9 @@ public class Person extends TaskAgent {
     //  Modello SEIR
     // ------------------------------------
 
+    /**
+     * Sets the individual to the susceptible state.
+     */
     public void setSusceptible() {
         diseaseStatus = SEIR.SUSCEPTIBLE;
 
@@ -321,10 +331,18 @@ public class Person extends TaskAgent {
             System.out.println(getLocalName() + " is susceptible");
     }
 
+    /**
+     * Is the individual susceptible?
+     *
+     * @return the boolean which answers the question
+     */
     public boolean isSusceptible() {
         return diseaseStatus == SEIR.SUSCEPTIBLE;
     }
 
+    /**
+     * Sets the individual to the exposed state.
+     */
     public void setExposed() {
 
         if (diseaseStatus == SEIR.SUSCEPTIBLE) {
@@ -345,10 +363,18 @@ public class Person extends TaskAgent {
         }
     }
 
+    /**
+     * Is the individual exposed?
+     *
+     * @return the boolean which answers the question.
+     */
     public boolean isExposed() {
         return diseaseStatus == SEIR.EXPOSED;
     }
 
+    /**
+     * Sets the individual to the infectious state.
+     */
     public void setInfectious() {
         diseaseStatus = SEIR.INFECTIOUS;
         updateStatistics("Infected");  //Manda messaggio all'agente Statistics
@@ -365,10 +391,18 @@ public class Person extends TaskAgent {
         });
     }
 
+    /**
+     * Is the individual infectious?
+     *
+     * @return the boolean which answers the question.
+     */
     public boolean isInfectious() {
         return diseaseStatus == SEIR.INFECTIOUS;
     }
 
+    /**
+     * Sets the individual to the recovered state.
+     */
     public void setRecovered() {
 
         if (diseaseStatus == SEIR.INFECTIOUS)
@@ -382,10 +416,20 @@ public class Person extends TaskAgent {
         updateStatistics("Recovered");
     }
 
+    /**
+     * Is the individual recovered?
+     *
+     * @return the boolean which answers the question.
+     */
     public boolean isRecovered() {
         return diseaseStatus == SEIR.RECOVERED;
     }
 
+    /**
+     * Random death boolean calcolated differently if the individual is in hospital or not.
+     *
+     * @return the boolean which states if the individual is dead or not.
+     */
     boolean randomDeath() {
         if (noHospital) {
             return BooleanProbability.getBoolean(outDeathProbability);
@@ -394,6 +438,11 @@ public class Person extends TaskAgent {
         }
     }
 
+    /**
+     * Random illness boolean calcolated differently if the individual is infectious or not.
+     *
+     * @return the boolean which states if the individual is dead or not.
+     */
     boolean randomIllness() {
         if (isInfectious())
             return BooleanProbability.getBoolean(diseaseIllProbability);
@@ -405,6 +454,11 @@ public class Person extends TaskAgent {
     //  Spostamenti
     // ------------------------------------
 
+    /**
+     * Sets location in which the individual is.
+     *
+     * @param l the location where the individual will be
+     */
     public void setLocation(Location l) {
 
         //System.out.println("L'agente " + getLocalName() + " si sposta in " + l.toString());
@@ -422,7 +476,7 @@ public class Person extends TaskAgent {
     }
 
     /**
-     * Registra un servizio contagion relativo a una location
+     * Registers the contagion service to which the susceptible individual can subscribe to be infected
      */
     public void registerContagionService() {
         try {
@@ -432,6 +486,9 @@ public class Person extends TaskAgent {
         }
     }
 
+    /**
+     * Update contagion service.
+     */
     public void updateContagionService() {
         try {
             DFService.modify(this, createContagionService());
@@ -440,6 +497,9 @@ public class Person extends TaskAgent {
         }
     }
 
+    /**
+     * Deregister contagion service (it happens when the infectious individual leaves the location he is in).
+     */
     public void deregisterContagionService() {
         try {
             DFService.deregister(this);
@@ -448,6 +508,11 @@ public class Person extends TaskAgent {
         }
     }
 
+    /**
+     * Create contagion service to which the susceptible individual can subscribe to be infected.
+     *
+     * @return the df agent description which describes the contagion service
+     */
     protected DFAgentDescription createContagionService() {
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
@@ -463,7 +528,7 @@ public class Person extends TaskAgent {
     }
 
     /**
-     * Notifica se esistono possibilità di contagio nel luogo corrente
+     * Notification service for susceptible individuals if they get infected by infectious individual in the current location.
      */
     public void subscribeContagionService() {
         DFAgentDescription template = new DFAgentDescription();
@@ -507,6 +572,9 @@ public class Person extends TaskAgent {
         subscriptions.add(subscription);
     }
 
+    /**
+     * The individual unsubscribes all services.
+     */
     public void unsubscribeAll() {
         //if (Simulation.debug)
             //System.out.println(getLocalName() + " unsubscribed");
@@ -524,6 +592,7 @@ public class Person extends TaskAgent {
 
     /**
      * Task per raggiungere una destinazione passando per le strade intermedie.
+     * Task for traveling to a destination through streets.
      */
     class TravelTask extends SequentialBehaviour {
 
@@ -557,7 +626,7 @@ public class Person extends TaskAgent {
     }
 
     /**
-     * Task per attendere un certo numero di ticks.
+     * Task for waiting.
      */
     class WaitingTask extends DelayBehaviour {
 
@@ -573,7 +642,7 @@ public class Person extends TaskAgent {
     }
 
     /**
-     * Task per effettuare una passeggiata.
+     * Task for going for a walk.
      */
     class WalkingTask extends SequentialBehaviour {
         public WalkingTask(Agent a, int maxDistance) {
@@ -610,10 +679,10 @@ public class Person extends TaskAgent {
     }
 
     /**
-     * Trova l'indirizzo del Business più vicino di un categoria desiderata.
+     * Finds closest Building with the specified category
      *
-     * @param category categoria del Business
-     * @return indirizzo del Business più vicino. null se non esiste
+     * @param category Business category
+     * @return closest Building, null if it doesn't exist.
      */
     protected Building findNearestBusiness(String category) {
 
@@ -679,7 +748,7 @@ public class Person extends TaskAgent {
     // ------------------------------------
 
     /**
-     * Notifica inviti ad eventi
+     * Notification service for events
      */
     public void subscribeEvents() {
         DFAgentDescription template = new DFAgentDescription();
@@ -719,6 +788,11 @@ public class Person extends TaskAgent {
         addBehaviour(subscription);
     }
 
+    /**
+     * Go to the event.
+     *
+     * @param eventSetting the Building where the event is at.
+     */
     void goEvent(Building eventSetting) {
         if (!goingEvent) {
             goingEvent = true;
@@ -758,6 +832,11 @@ public class Person extends TaskAgent {
         }
     }
 
+    /**
+     * Probability to go to the event.
+     *
+     * @return the boolean which states if the individual will go to the event or not.
+     */
     boolean randomGoEvent() {
         return BooleanProbability.getBoolean(eventProbability);
     }
@@ -766,6 +845,12 @@ public class Person extends TaskAgent {
     //  Statistiche
     // ------------------------------------
 
+    /**
+     * Find service agent aid.
+     *
+     * @param type the type of agent searched.
+     * @return the AID of the result
+     */
     protected AID findServiceAgent(String type) {
         DFAgentDescription dfd = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
@@ -784,6 +869,11 @@ public class Person extends TaskAgent {
             return null;
     }
 
+    /**
+     * Update statistics.
+     *
+     * @param s the string representing the content of the message.
+     */
     protected void updateStatistics(String s) {
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
         msg.addReceiver(new AID("Statistics", AID.ISLOCALNAME));
@@ -795,7 +885,13 @@ public class Person extends TaskAgent {
     //  Contagio
     // ------------------------------------
 
-    // True se due persone si avvicinano
+    /**
+     * Meeting beetwen an infectious individual and a susceptible one.
+     *
+     * @param infectiousDist the infectious distribution
+     * @return the boolean is true if they meet, false otherwise
+     */
+// True se due persone si avvicinano
     boolean meet(double infectiousDist) {
         double susceptibleDist = distancing();
         boolean m = BooleanProbability.getBoolean(Math.max(infectiousDist,susceptibleDist));
@@ -804,7 +900,13 @@ public class Person extends TaskAgent {
         return m;
     }
 
-    // True se avviene il contagio
+    /**
+     * Probability that the contagion occurs beetwen two individual.
+     *
+     * @param infectiousDPI the infectious' dpi value
+     * @return the boolean is true if the contagion occurs, false otherwise
+     */
+// True se avviene il contagio
     boolean contagion(boolean infectiousDPI) {
         double probability = 1;
         boolean susceptibleDPI = haveDPI();
@@ -826,14 +928,24 @@ public class Person extends TaskAgent {
         return c;
     }
 
-    // Probabilità di avvicinarsi a qualcuno
+    /**
+     * Probability to come close to someone
+     *
+     * @return the double probability to come close to someone
+     */
+// Probabilità di avvicinarsi a qualcuno
     double distancing() {
         Double minDist = position.getDensity();
         Double maxDist = naughty ? 1 : currentDecree.getDensity();
         return minDist + Math.random() * (maxDist-minDist);
     }
 
-    // Possesso DPI come mascherine e guanti
+    /**
+     * Does the individual has DPI?
+     *
+     * @return the boolean is true if the individual has dpi, false if not.
+     */
+// Possesso DPI come mascherine e guanti
     boolean haveDPI() {
         boolean have = false;
         boolean indoor = position instanceof Building;
@@ -852,7 +964,7 @@ public class Person extends TaskAgent {
     // ------------------------------------
 
     /**
-     * Notifica aggiornamenti alle normative
+     * Notification service for decree updates
      */
     public void subscribeDecrees() {
         DFAgentDescription template = new DFAgentDescription();
@@ -902,7 +1014,7 @@ public class Person extends TaskAgent {
     // ------------------------------------
 
     /**
-     * Notifica aggiornamenti relativi alla disponibilità di posti letto in ospedale
+     * Notification service for available hospital beds
      */
     public void subscribeHealthCare() {
         DFAgentDescription template = new DFAgentDescription();
@@ -937,6 +1049,11 @@ public class Person extends TaskAgent {
         addBehaviour(subscription);
     }
 
+    /**
+     * Update hospital beds.
+     *
+     * @param b the b is true if the hospital bed is taken, false if there is a vacancy for it
+     */
     void updateBeds(boolean b) {
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
         msg.addReceiver(new AID("HealthCare", AID.ISLOCALNAME));
@@ -948,12 +1065,21 @@ public class Person extends TaskAgent {
     //
     // ------------------------------------
 
+    /**
+     * Function for randomize parameter
+     *
+     * @param value the value
+     * @return the int randomized value
+     */
     static int randomize(int value) {
         double base = (double) value * .5;
         double top = (double) value * Math.random();
         return (int) (base+top);
     }
 
+    /**
+     * Function for randomize simulation's parameters
+     */
     void randomize() {
         seirDelta = randomize(seirDelta);
         seirGamma = randomize(seirGamma);

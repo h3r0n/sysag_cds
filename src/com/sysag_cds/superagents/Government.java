@@ -63,6 +63,9 @@ public class Government extends GuiAgent {
         }
     }
 
+    /**
+     * Update service.
+     */
     public void updateService() {
         try {
             DFService.modify(this, createService());

@@ -14,7 +14,7 @@ import jade.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
 
 /**
- * L'agente Statistics raccoglie i numeri relativi al contagio e li stampa periodicamente.
+ * Statistics agent that counts periodically the stats' values and prints them
  */
 public class Statistics extends Agent {
 
@@ -44,6 +44,9 @@ public class Statistics extends Agent {
         });
     }
 
+    /**
+     * Register statistics service.
+     */
     void registerStatisticsService() {
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
@@ -59,6 +62,9 @@ public class Statistics extends Agent {
         }
     }
 
+    /**
+     * Counts periodically the stats' numbers
+     */
     class manageStatsCounts extends CyclicBehaviour {
         @Override
         public void action() {
@@ -86,6 +92,9 @@ public class Statistics extends Agent {
         }
     }
 
+    /**
+     * Print statistics.
+     */
     public void printStatistics() {
         System.out.println(infected+" total infectious");
         System.out.println(currentInfected+" currently infectious");
@@ -94,6 +103,9 @@ public class Statistics extends Agent {
         System.out.println(dead+" deaths");
     }
 
+    /**
+     * Notification service for health care.
+     */
     public void subscribeHealthCare() {
         DFAgentDescription template = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();

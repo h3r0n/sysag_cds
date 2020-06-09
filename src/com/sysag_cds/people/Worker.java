@@ -16,9 +16,8 @@ import jade.domain.FIPAException;
 import jade.util.leap.Iterator;
 
 /**
- * L'agente Worker è una specializzazione dell'agente Person che in più si sposta periodicamente verso
- * il proprio posto di lavoro, che gli assicura una più bassa probabilità di contagio, se indicato
- * dall'agente Government.
+ * The Worker Agent is a more specific kind of Person Agent who has an own work place,with low contagion probability, to which he goes periodically
+ *
  */
 public class Worker extends Person {
 
@@ -75,6 +74,12 @@ public class Worker extends Person {
         });
     }
 
+    /**
+     * Is the Building building open?
+     *
+     * @param building the building
+     * @return the boolean is true if it is open, false otherwise
+     */
     boolean isOpen(Building building) {
         boolean open = false;
 

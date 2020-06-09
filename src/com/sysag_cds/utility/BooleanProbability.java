@@ -3,7 +3,7 @@ package com.sysag_cds.utility;
 import java.util.stream.Stream;
 
 /**
- * Variabile aleatoria bernoulliana.
+ * Bernoulli random variable.
  */
 public class BooleanProbability {
     public static String getTrueFalse(Double probability) {

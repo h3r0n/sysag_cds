@@ -16,6 +16,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 
+/**
+ * The Statistics gui where the chart is shown.
+ */
 public class StatGui {
 
     JFrame frame = new JFrame("Statistics");
@@ -29,6 +32,9 @@ public class StatGui {
     List<Integer> datap = new LinkedList<>();
     JPanel chartPanel;
 
+    /**
+     * Instantiates a new Stat gui.
+     */
     StatGui() {
         datax.add(0.0); datatp.add(0); datacp.add(0); datae.add(0); datar.add(0); datad.add(0); datap.add(0);
         buildGui();
@@ -70,6 +76,10 @@ public class StatGui {
         frame.setVisible(true);
     }
 
+    /**
+     * Add the data.
+     *
+     */
     void addData(double x, int tp, int cp,int e, int r, int d, int p) {
         datax.add(x);
         datatp.add(tp);
@@ -81,6 +91,9 @@ public class StatGui {
         update();
     }
 
+    /**
+     * Updates the chart
+     */
     void update() {
         chart.updateXYSeries("Totale positivi", datax,datatp,null);
         chart.updateXYSeries("Attualmente positivi", datax, datacp,null);

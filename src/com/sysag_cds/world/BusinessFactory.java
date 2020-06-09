@@ -9,8 +9,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Classe factory che crea agenti di tipo Business nel container corrente in edifici diversi.
- * Mantiene una lista delle posizioni usate.
+ * Factory Class that creates Business Agents in the current container in different buildings.
+ * It keeps a list of used locations.
  */
 public class BusinessFactory {
 
@@ -23,12 +23,22 @@ public class BusinessFactory {
     ContainerController c;
     Object[] businessArgs = new Object[3];
 
+    /**
+     * Instantiates a new Business factory.
+     *
+     * @param creator the creator
+     * @param bp      the Random Building Agent bp
+     * @param cp      the Random Business Agent cp
+     */
     public BusinessFactory(Agent creator, RandomBuilding bp, RandomBusiness cp) {
         c = creator.getContainerController();
         this.bp = bp;
         this.cp = cp;
     }
 
+    /**
+     * Creates a Business.
+     */
     public void create() {
         Building b = bp.getRandomBuildingAndRemove();
         list.add(b);
@@ -51,6 +61,11 @@ public class BusinessFactory {
         }
     }
 
+    /**
+     * Gets Business list.
+     *
+     * @return the list
+     */
     public List<Building> getList() {
         return list;
     }
