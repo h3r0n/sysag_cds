@@ -37,7 +37,8 @@ public class Worker extends Person {
             workplace = World.getInstance().findBuilding(new Building((String) args[3]));
         }
 
-        System.out.println(this.getLocalName()+" works in "+ workplace.toString());
+        if (Simulation.debug)
+            System.out.println(this.getLocalName()+" works in "+ workplace.toString());
 
         addBehaviour(new TickerBehaviour(this, Simulation.tick * workInterval) {
             protected void onTick() {

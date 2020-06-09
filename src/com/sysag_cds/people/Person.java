@@ -115,7 +115,8 @@ public class Person extends TaskAgent {
                 home = World.getInstance().findBuilding(new Building((String) args[1]));
                 home.setDensity(1.0);
                 position = home;
-                System.out.println(this.getLocalName()+" abita in "+ position.toString());
+                if (Simulation.debug)
+                    System.out.println(this.getLocalName()+" lives in "+ position.toString());
             }
             // il terzo argomento specifica l'incoscienza
             if (args.length >= 3 && args[2].equals("True")) {
