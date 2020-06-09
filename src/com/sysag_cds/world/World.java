@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * A Class with a single instance (singleton) that represents a map in which the simulation takes place.
+ * A Class with a single instance (singleton) that represents a map in which the simulation takes place.<br>
  * Has several path finding methods.
  */
 public class World {

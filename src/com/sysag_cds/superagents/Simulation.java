@@ -13,21 +13,21 @@ import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
 
 /**
- * The Simulation Agent creates other agents and starts the simulation.
- * Simulation Parameters:
- *     [0] number of Person agents
- *     [1-4] probability that generates SUSCEPTIBLE,EXPOSED,INFECTIOUS,RECOVERED Person agents
- *     [5] probability that generates naughty Person agents (beetwen 0 and 1)
- *     [6] probability that generates workers (beetwen 0 and 1)
- *     [7] number of Building of each side, the map is a square. It must be >= 2
- *     [8] number of Business building
- *     [9] number of hospital beds
+ * The Simulation Agent creates other agents and starts the simulation.<br>
+ * Simulation Parameters:<br>
+ *     [0] number of Person agents<br>
+ *     [1-4] probability that generates SUSCEPTIBLE,EXPOSED,INFECTIOUS,RECOVERED Person agents<br>
+ *     [5] probability that generates naughty Person agents (beetwen 0 and 1)<br>
+ *     [6] probability that generates workers (beetwen 0 and 1)<br>
+ *     [7] number of Building of each side, the map is a square. It must be >= 2<br>
+ *     [8] number of Business building<br>
+ *     [9] number of hospital beds<br>
  *
- * Example: -agents simulation:com.sysag_cds.superagents.Simulation(100,.9,0,.1,0,.2,.5,15,20,5)
- *     Generates 100 Persons, with the 90% probability of been SUSCEPTIBLE and the 10% probability to be INFECTIOUS
- *     20% probability to be naughty e il 50% probability to be workers
- *     Generates a map composed by 225 building, in which there are 20 Business
- *     Among all hospitals there are 5 beds available
+ * Example: -agents simulation:com.sysag_cds.superagents.Simulation(100,.9,0,.1,0,.2,.5,15,20,5)<br>
+ *     Generates 100 Persons, with the 90% probability of been SUSCEPTIBLE and the 10% probability to be INFECTIOUS<br>
+ *     20% probability to be naughty e il 50% probability to be workers<br>
+ *     Generates a map composed by 225 building, in which there are 20 Business<br>
+ *     Among all hospitals there are 5 beds available<br>
  */
 public class Simulation extends Agent {
     public static int tick = 1000;

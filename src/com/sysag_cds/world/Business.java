@@ -13,7 +13,7 @@ import jade.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
 
 /**
- * Business Agent to whom other Person agents go for different reasons.
+ * Business Agent to whom other Person agents go for different reasons.<br>
  * It is open or closed according to the decree updates.
  */
 public class Business extends Agent {

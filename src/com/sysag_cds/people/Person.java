@@ -25,17 +25,17 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Person Agent models the individual's behaviour who moves across the map for many purposes.
- * Can become infectious and can infect other agents.
+ * Person Agent models the individual's behaviour who moves across the map for many purposes.<br>
+ * Can become infectious and can infect other agents.<br>
  */
 public class Person extends TaskAgent {
 
     /**
-     * The enum Seir which models the stages of the disease:
-     * SUSCEPTIBLE: the individual has never come in contact with the virus yet
-     * EXPOSED: the individual has come in contact with the virus and is now ill but not infectious yet
-     * INFECTIOUS: the individual can now infect other individuals
-     * RECOVERED: the individual is definitely healed and can't be infected again
+     * The enum Seir which models the stages of the disease:<br>
+     * SUSCEPTIBLE: the individual has never come in contact with the virus yet<br>
+     * EXPOSED: the individual has come in contact with the virus and is now ill but not infectious yet<br>
+     * INFECTIOUS: the individual can now infect other individuals<br>
+     * RECOVERED: the individual is definitely healed and can't be infected again<br>
      */
     public enum SEIR {
         SUSCEPTIBLE,
@@ -853,7 +853,7 @@ public class Person extends TaskAgent {
 
     /**
      * Find service agent aid.
-     * Deprecated.
+     * @deprecated.
      *
      * @param type the type of agent searched.
      * @return the AID of the result
@@ -908,7 +908,8 @@ public class Person extends TaskAgent {
     }
 
     /**
-     * Probability that the contagion occurs beetwen two individual.
+     * Probability that the contagion occurs beetwen two individual.<br>
+     * Change this implementation to make the disease more or less contagious<br>
      *
      * @param infectiousDPI the infectious' dpi value
      * @return the boolean is true if the contagion occurs, false otherwise

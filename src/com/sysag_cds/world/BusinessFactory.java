@@ -9,7 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Factory Class that creates Business Agents in the current container in different buildings.
+ * Factory Class that creates Business Agents in the current container in different buildings.<br>
  * It keeps a list of used locations.
  */
 public class BusinessFactory {
