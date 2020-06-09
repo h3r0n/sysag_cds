@@ -14,6 +14,12 @@ diffusione della patologia.
 Il sistema è codificato in [Java 8](https://adoptopenjdk.net/?variant=openjdk8&jvmVariant=hotspot)
 sfruttando le funzionalità della libreria [JADE](https://jade.tilab.com/).
 
+Links:
+* [Guida utente](#guida-utente)
+* [Guida sviluppatori](#guida-sviluppatori)
+* [Descrizione del sistema](#descrizione-del-sistema)
+* [Documentazione Javadoc](https://h3r0n.github.io/sysag_cds/)
+
 # Guida utente
 #### Prerequisiti
 Verificare di aver installato Java 8 o superiore. In caso contrario scaricare il JRE (il JDK è necessario
