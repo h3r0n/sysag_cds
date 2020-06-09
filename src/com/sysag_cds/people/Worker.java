@@ -16,7 +16,7 @@ import jade.domain.FIPAException;
 import jade.util.leap.Iterator;
 
 /**
- * The Worker Agent is a more specific kind of Person Agent who has an own work place,with low contagion probability, to which he goes periodically
+ * The Worker Agent is a more specific kind of Person Agent who has an own workplace,with low contagion probability, to which he goes periodically
  *
  */
 public class Worker extends Person {

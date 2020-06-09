@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 
 /**
  * A Class with a single instance (singleton) that represents a map in which the simulation takes place.
- * Has PathFinding methods.
+ * Has several path finding methods.
  */
 public class World {
 
@@ -80,7 +80,7 @@ public class World {
     }
 
     /**
-     * Gets the path.
+     * Gets the path between two buildings.
      *
      * @param begin the begin
      * @param end   the end
@@ -93,7 +93,7 @@ public class World {
     }
 
     /**
-     * Gets the distance.
+     * Gets the distance between two buildings.
      *
      * @param begin the begin
      * @param end   the end
@@ -169,7 +169,7 @@ public class World {
     }
 
     /**
-     * Finds the building.
+     * Finds the building instance inside the map.
      *
      * @param b the building searched
      * @return the building found

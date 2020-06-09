@@ -68,6 +68,11 @@ public class EventPlanner extends Agent {
         }
     }
 
+    /**
+     * Update service.
+     *
+     * @param setting the setting
+     */
     public void updateService(Building setting) {
         try {
             DFService.modify(this, createService(setting));

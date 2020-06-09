@@ -529,7 +529,7 @@ public class Person extends TaskAgent {
     }
 
     /**
-     * Notification service for susceptible individuals if they get infected by infectious individual in the current location.
+     * Notification service for susceptible individuals so they can get infected by infectious individual in the current location.
      */
     public void subscribeContagionService() {
         DFAgentDescription template = new DFAgentDescription();
@@ -574,7 +574,7 @@ public class Person extends TaskAgent {
     }
 
     /**
-     * The individual unsubscribes all services.
+     * The individual unsubscribes all contagion services.
      */
     public void unsubscribeAll() {
         //if (Simulation.debug)
@@ -592,8 +592,7 @@ public class Person extends TaskAgent {
     // ------------------------------------
 
     /**
-     * Task per raggiungere una destinazione passando per le strade intermedie.
-     * Task for traveling to a destination through streets.
+     * Task for reaching a destination across streets.
      */
     class TravelTask extends SequentialBehaviour {
 
@@ -627,13 +626,19 @@ public class Person extends TaskAgent {
     }
 
     /**
-     * Task for waiting.
+     * Task for waiting a specified amount of time.
      */
     class WaitingTask extends DelayBehaviour {
 
         boolean wait = true;
         int ticks;
 
+        /**
+         * Instantiates a new Waiting task.
+         *
+         * @param a     the agent
+         * @param ticks the time ticks
+         */
         public WaitingTask(Agent a, int ticks) {
             super(a, ticks);
         }
@@ -683,7 +688,7 @@ public class Person extends TaskAgent {
      * Finds closest Building with the specified category
      *
      * @param category Business category
-     * @return closest Building, null if it doesn't exist.
+     * @return closest Building, null if it doesn't exist or it is unreachable.
      */
     protected Building findNearestBusiness(String category) {
 
@@ -848,6 +853,7 @@ public class Person extends TaskAgent {
 
     /**
      * Find service agent aid.
+     * Deprecated.
      *
      * @param type the type of agent searched.
      * @return the AID of the result
@@ -871,7 +877,7 @@ public class Person extends TaskAgent {
     }
 
     /**
-     * Update statistics.
+     * Send data to the statistics agent.
      *
      * @param s the string representing the content of the message.
      */
@@ -887,9 +893,9 @@ public class Person extends TaskAgent {
     // ------------------------------------
 
     /**
-     * Meeting beetwen an infectious individual and a susceptible one.
+     * Whether the susceptible individual meets an infectious one.
      *
-     * @param infectiousDist the infectious distribution
+     * @param infectiousDist the infectious distancing value
      * @return the boolean is true if they meet, false otherwise
      */
 // True se due persone si avvicinano
@@ -942,7 +948,7 @@ public class Person extends TaskAgent {
     }
 
     /**
-     * Does the individual has DPI?
+     * Does the individual has DPI/PPE?
      *
      * @return the boolean is true if the individual has dpi, false if not.
      */
@@ -1053,7 +1059,7 @@ public class Person extends TaskAgent {
     /**
      * Update hospital beds.
      *
-     * @param b the b is true if the hospital bed is taken, false if there is a vacancy for it
+     * @param b the boolean is true if the hospital bed is taken by the individual, false if there is a vacancy for it
      */
     void updateBeds(boolean b) {
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
@@ -1067,7 +1073,7 @@ public class Person extends TaskAgent {
     // ------------------------------------
 
     /**
-     * Function for randomize parameter
+     * Function for randomize parameter by 50%
      *
      * @param value the value
      * @return the int randomized value

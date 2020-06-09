@@ -13,8 +13,8 @@ import jade.gui.GuiEvent;
 import javax.swing.*;
 
 /**
- * L'agente Government può emanare decreti riguardo il distanziamento sociale, la chiusura di Business
- * e l'obbligo di indossare DPI.
+ * The Government agent can define decrees concerning social distancing, Business closing status, and DPI/PPE status
+ *
  */
 public class Government extends GuiAgent {
 
@@ -31,6 +31,11 @@ public class Government extends GuiAgent {
         new GovGui(this);
     }
 
+    /**
+     * Update decree.
+     *
+     * @param newDecree the new decree
+     */
     public void updateDecree(Decree newDecree) {
         currentDecree = newDecree;
         updateService();

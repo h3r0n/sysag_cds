@@ -7,7 +7,6 @@ import java.util.List;
 
 /**
  * Factory Class which returns Building instances.It keeps a list of generated instances
- * Classe factory che restituisce istanze di classe Building. Mantiene una lista delle istanze create.
  */
 public class BuildingFactory implements Supplier<Building> {
 

@@ -37,7 +37,7 @@ public class GovGui {
     /**
      * Instantiates a new Gov gui.
      *
-     * @param a the GuiAgent a
+     * @param a the GuiAgent
      */
     public GovGui(GuiAgent a) {
         myAgent = a;

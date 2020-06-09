@@ -1,7 +1,7 @@
 package com.sysag_cds.utility;
 
 /**
- * Specifica le norme sul distanziamento sociale, la chiusura di Business e l'obbligo di indossare DPI.
+ * The Decree class defines rules concerning social distancing, Business closing status, and DPI/PPE status
  */
 public class Decree {
 

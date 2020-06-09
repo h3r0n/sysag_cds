@@ -29,7 +29,7 @@ public class PersonFactory {
      * Instantiates a new Person factory.
      *
      * @param creator the creator which creates the person factory instance
-     * @param bp      the Random Building bp instance for building places
+     * @param bp      the Random Building bp instance for houses
      * @param wpp     the Random Building wpp instance for working places
      * @param sp      the Random SEIR sp instance for SEIR probabilities
      * @param np      the naughty probability np
@@ -45,7 +45,7 @@ public class PersonFactory {
     }
 
     /**
-     * Creates a Person agent.
+     * Creates a Person agent or a Worker agent.
      */
     public void create() {
         if (BooleanProbability.getBoolean(workingProb)) {

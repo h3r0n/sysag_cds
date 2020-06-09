@@ -1,7 +1,7 @@
 package com.sysag_cds.world;
 
 /**
- * A Road with is Location
+ * A Road in a Location
  */
 public class Road extends Location {
 
