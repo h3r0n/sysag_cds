@@ -25,8 +25,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * L'agente Person simula i comportamenti di una persona che si muove nella mappa per diversi
- * scopi. È in grado di contrarre la malattia e di contagiare altri agenti Person.
+ * Person Agent models the individual's behaviour who moves across the map for many purposes.
+ * Can become infectious and can infect other agents.
  */
 public class Person extends TaskAgent {
 
