@@ -31,7 +31,7 @@ import java.util.List;
 public class Person extends TaskAgent {
 
     /**
-     * The enum Seir which models the stages of the disease:<br>
+     * The enum SEIR which models the stages of the disease:<br>
      * SUSCEPTIBLE: the individual has never come in contact with the virus yet<br>
      * EXPOSED: the individual has come in contact with the virus and is now ill but not infectious yet<br>
      * INFECTIOUS: the individual can now infect other individuals<br>
